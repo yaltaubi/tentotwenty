@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  />
   <title>Yoru</title>
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -11,7 +14,7 @@
   <div class="background-overlay"></div>
 
   <main class="app">
-    <img id="logo" class="logo logo-image" src="logo.png" alt="نسبة وتناسب" />
+    <img id="logo" class="logo logo-image" src="logo.png" alt="Yoru logo" />
 
     <section id="login-section" class="login-section hidden">
       <input
@@ -20,6 +23,8 @@
         class="password-input"
         placeholder="Password"
         autocomplete="off"
+        autocapitalize="none"
+        spellcheck="false"
       />
       <div id="error-message" class="error-message"></div>
     </section>
