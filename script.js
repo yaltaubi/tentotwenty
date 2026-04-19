@@ -6,10 +6,10 @@ const errorMessage = document.getElementById("error-message");
 const correctPassword = "yoru";
 let unlocked = false;
 
-/* Start sequence:
-   1. Logo appears in center
+/* Sequence:
+   1. Logo appears
    2. Logo moves to top
-   3. Password input fades in
+   3. Password input appears
 */
 window.addEventListener("load", () => {
   setTimeout(() => {
@@ -31,15 +31,13 @@ passwordInput.addEventListener("keydown", (e) => {
 function checkPassword() {
   if (unlocked) return;
 
-  const enteredPassword = passwordInput.value.trim();
+  const enteredPassword = passwordInput.value.trim().toLowerCase();
 
-  if (enteredPassword === correctPassword) {
+  if (enteredPassword === correctPassword.toLowerCase()) {
     unlocked = true;
     clearError();
     document.body.classList.add("unlocked");
     passwordInput.blur();
-
-    // optional: disable input after unlock
     passwordInput.disabled = true;
   } else {
     showError("peep");
@@ -61,11 +59,11 @@ function clearError() {
 
 function triggerShake() {
   passwordInput.classList.remove("shake");
-  void passwordInput.offsetWidth; // restart animation
+  void passwordInput.offsetWidth;
   passwordInput.classList.add("shake");
 }
 
-/* No audio file needed */
+/* Small generated sound, no audio file needed */
 function playPeepSound() {
   const AudioContextClass = window.AudioContext || window.webkitAudioContext;
   if (!AudioContextClass) return;
