@@ -3,43 +3,29 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Interactive Intro Site</title>
+  <title>Yoru</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- Password Screen -->
-  <section id="login-screen" class="screen active">
-    <div class="card">
-      <h1>Enter Password</h1>
-      <p>Type the password to begin the experience.</p>
-      <input type="password" id="password-input" placeholder="Password" />
-      <button id="enter-btn">Enter</button>
-      <p id="error-message"></p>
-    </div>
-  </section>
+  <div class="background-layer"></div>
+  <div class="background-overlay"></div>
 
-  <!-- Intro Sequence -->
-  <section id="intro-screen" class="screen hidden">
-    <div class="scene scene-1 active-scene">
-      <h2 class="fade-text">Welcome</h2>
-    </div>
+  <main class="app">
+    <div id="logo" class="logo">YORU</div>
 
-    <div class="scene scene-2">
-      <h2 class="fade-text">Get ready...</h2>
-    </div>
+    <section id="login-section" class="login-section hidden">
+      <input
+        type="password"
+        id="password-input"
+        class="password-input"
+        placeholder="Password"
+        autocomplete="off"
+      />
+      <div id="error-message" class="error-message"></div>
+    </section>
 
-    <div class="scene scene-3">
-      <h2 class="fade-text">The show begins now</h2>
-    </div>
-  </section>
-
-  <!-- Main Content -->
-  <section id="main-screen" class="screen hidden">
-    <div class="card">
-      <h1>Main Website</h1>
-      <p>This is where your actual website content starts.</p>
-    </div>
-  </section>
+    <section id="main-screen" class="main-screen hidden"></section>
+  </main>
 
   <script src="script.js"></script>
 </body>
