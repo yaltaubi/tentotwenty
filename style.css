@@ -230,4 +230,9 @@ body.unlocked .logo {
   .password-input {
     padding: 14px 16px;
   }
+.logo-image {
+  width: min(42vw, 320px);
+  height: auto;
+  object-fit: contain;
+  }
 }
