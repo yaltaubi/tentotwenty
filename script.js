@@ -1,70 +1,93 @@
-const enterBtn = document.getElementById("enter-btn");
+const logo = document.getElementById("logo");
+const loginSection = document.getElementById("login-section");
 const passwordInput = document.getElementById("password-input");
 const errorMessage = document.getElementById("error-message");
 
-const loginScreen = document.getElementById("login-screen");
-const introScreen = document.getElementById("intro-screen");
-const mainScreen = document.getElementById("main-screen");
+const correctPassword = "yoru";
+let unlocked = false;
 
-const correctPassword = "yo";
+/* Start sequence:
+   1. Logo appears in center
+   2. Logo moves to top
+   3. Password input fades in
+*/
+window.addEventListener("load", () => {
+  setTimeout(() => {
+    logo.classList.add("to-top");
+  }, 1800);
 
-enterBtn.addEventListener("click", checkPassword);
+  setTimeout(() => {
+    loginSection.classList.remove("hidden");
+    passwordInput.focus();
+  }, 2750);
+});
 
-passwordInput.addEventListener("keydown", function (e) {
+passwordInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter") {
     checkPassword();
   }
 });
 
 function checkPassword() {
+  if (unlocked) return;
+
   const enteredPassword = passwordInput.value.trim();
 
   if (enteredPassword === correctPassword) {
-    errorMessage.textContent = "";
-    playPeepSound();
+    unlocked = true;
+    clearError();
+    document.body.classList.add("unlocked");
+    passwordInput.blur();
 
-    loginScreen.classList.remove("active");
-    loginScreen.classList.add("hidden");
-
-    introScreen.classList.remove("hidden");
-    introScreen.classList.add("active");
-
-    startSequence();
+    // optional: disable input after unlock
+    passwordInput.disabled = true;
   } else {
-    errorMessage.textContent = "peep";
+    showError("peep");
     playPeepSound();
+    triggerShake();
+    passwordInput.select();
   }
 }
 
-function playPeepSound() {
-  const audio = new Audio("peep.mp3");
-  audio.play();
+function showError(text) {
+  errorMessage.textContent = text;
+  errorMessage.classList.add("show");
 }
 
-function startSequence() {
-  const scenes = document.querySelectorAll(".scene");
-  let currentScene = 0;
+function clearError() {
+  errorMessage.textContent = "";
+  errorMessage.classList.remove("show");
+}
 
-  scenes.forEach((scene, index) => {
-    scene.style.opacity = index === 0 ? "1" : "0";
-  });
+function triggerShake() {
+  passwordInput.classList.remove("shake");
+  void passwordInput.offsetWidth; // restart animation
+  passwordInput.classList.add("shake");
+}
 
-  const interval = setInterval(() => {
-    scenes[currentScene].style.opacity = "0";
-    currentScene++;
+/* No audio file needed */
+function playPeepSound() {
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) return;
 
-    if (currentScene < scenes.length) {
-      scenes[currentScene].style.opacity = "1";
-    } else {
-      clearInterval(interval);
+  const ctx = new AudioContextClass();
+  const oscillator = ctx.createOscillator();
+  const gainNode = ctx.createGain();
 
-      setTimeout(() => {
-        introScreen.classList.remove("active");
-        introScreen.classList.add("hidden");
+  oscillator.type = "sine";
+  oscillator.frequency.setValueAtTime(880, ctx.currentTime);
 
-        mainScreen.classList.remove("hidden");
-        mainScreen.classList.add("active");
-      }, 1000);
-    }
-  }, 2200);
+  gainNode.gain.setValueAtTime(0.0001, ctx.currentTime);
+  gainNode.gain.exponentialRampToValueAtTime(0.07, ctx.currentTime + 0.01);
+  gainNode.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.16);
+
+  oscillator.connect(gainNode);
+  gainNode.connect(ctx.destination);
+
+  oscillator.start();
+  oscillator.stop(ctx.currentTime + 0.17);
+
+  oscillator.onended = () => {
+    ctx.close();
+  };
 }
