@@ -233,7 +233,7 @@ body.unlocked .logo {
     padding: 14px 16px;
   }
 .logo-image {
-  width: min(160px, 38vw);   /* controls size */
+  width: min(140px, 35vw);   /* controls size */
   height: auto;
   object-fit: contain;
   }
