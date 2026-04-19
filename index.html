@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Interactive Intro Site</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Password Screen -->
+  <section id="login-screen" class="screen active">
+    <div class="card">
+      <h1>Enter Password</h1>
+      <p>Type the password to begin the experience.</p>
+      <input type="password" id="password-input" placeholder="Password" />
+      <button id="enter-btn">Enter</button>
+      <p id="error-message"></p>
+    </div>
+  </section>
+
+  <!-- Intro Sequence -->
+  <section id="intro-screen" class="screen hidden">
+    <div class="scene scene-1 active-scene">
+      <h2 class="fade-text">Welcome</h2>
+    </div>
+
+    <div class="scene scene-2">
+      <h2 class="fade-text">Get ready...</h2>
+    </div>
+
+    <div class="scene scene-3">
+      <h2 class="fade-text">The show begins now</h2>
+    </div>
+  </section>
+
+  <!-- Main Content -->
+  <section id="main-screen" class="screen hidden">
+    <div class="card">
+      <h1>Main Website</h1>
+      <p>This is where your actual website content starts.</p>
+    </div>
+  </section>
+
+  <script src="script.js"></script>
+</body>
+</html>
