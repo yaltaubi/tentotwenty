@@ -7,6 +7,8 @@
 :root {
   --top-logo-scale: 0.42;
   --top-logo-y: -42vh;
+  --top-logo-scale: 0.22;   /* smaller at top */
+  --top-logo-y: -44vh;
 }
 
 html, body {
@@ -70,7 +72,7 @@ body {
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%) scale(0.86);
-  font-size: clamp(3rem, 9vw, 7rem);
+  font-size: clamp(2rem, 5vw, 3.5rem); /* smaller */
   font-weight: 700;
   letter-spacing: 0.35em;
   padding-left: 0.35em;
@@ -231,7 +233,7 @@ body.unlocked .logo {
     padding: 14px 16px;
   }
 .logo-image {
-  width: min(42vw, 320px);
+  width: min(160px, 38vw);   /* controls size */
   height: auto;
   object-fit: contain;
   }
