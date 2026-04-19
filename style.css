@@ -13,9 +13,12 @@
 
 body {
   font-family: Arial, sans-serif;
-  background: #0f0f14;
   color: white;
   overflow: hidden;
+  background-image: url("leopard-bg.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .screen {
@@ -25,7 +28,7 @@ body {
   align-items: center;
   justify-content: center;
   transition: opacity 0.8s ease, visibility 0.8s ease;
-  background: radial-gradient(circle at center, #1e1e2f, #0b0b12);
+  background: rgba(0, 0, 0, 0.35);
 }
 
 .hidden {
