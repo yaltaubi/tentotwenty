@@ -1,203 +1,34 @@
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+async function playStorySequence() {
+  storyInner.innerHTML = "";
 
-html,
-body {
-  width: 100%;
-  height: 100%;
-}
+  for (const item of storySequence) {
+    const line = document.createElement("p");
+    line.className = "story-line";
+    if (item.final) line.classList.add("final-line");
 
-body {
-  font-family: Arial, Helvetica, sans-serif;
-  overflow: hidden;
-  background: #000;
-  color: #fff;
-  position: relative;
-}
+    storyInner.appendChild(line);
 
-/* Background */
-.background-layer {
-  position: fixed;
-  inset: 0;
-  background-image: url("leopard-bg.jpg");
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  transform: scale(1.08);
-  animation: backgroundDrift 18s ease-in-out infinite alternate;
-  transition: opacity 1.2s ease, filter 1.2s ease, transform 1.2s ease;
-  z-index: 0;
-}
+    await typeArabicText(line, item.text, 34);
 
-.background-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.72);
-  transition: background 1.2s ease, opacity 1.2s ease;
-  z-index: 1;
-}
+    line.classList.add("done");
 
-@keyframes backgroundDrift {
-  0% {
-    transform: scale(1.08) translate3d(0, 0, 0);
-  }
-  50% {
-    transform: scale(1.1) translate3d(-8px, -5px, 0);
-  }
-  100% {
-    transform: scale(1.09) translate3d(7px, 5px, 0);
+    await wait(item.waitAfter);
   }
 }
 
-.app {
-  position: relative;
-  z-index: 2;
-  width: 100%;
-  height: 100%;
-}
+async function typeArabicText(element, text, speed = 34) {
+  element.textContent = "";
 
-/* Password */
-.login-section {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  opacity: 1;
-  transition: opacity 0.7s ease, transform 0.7s ease;
-}
+  for (let i = 0; i < text.length; i++) {
+    element.textContent += text[i];
 
-.password-input {
-  width: min(82vw, 360px);
-  background: rgba(255, 255, 255, 0.12);
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 999px;
-  padding: 15px 18px;
-  font-size: 16px;
-  text-align: center;
-  outline: none;
-  backdrop-filter: blur(8px);
-  -webkit-tap-highlight-color: transparent;
-  transition:
-    background 0.3s ease,
-    border-color 0.3s ease,
-    box-shadow 0.3s ease,
-    transform 0.3s ease,
-    opacity 0.3s ease;
-}
+    const char = text[i];
+    let delay = speed;
 
-.password-input::placeholder {
-  color: rgba(255, 255, 255, 0.65);
-}
+    if (char === "…") delay = 260;
+    if (char === "؟" || char === "." || char === "،") delay = 180;
+    if (char === "\n") delay = 300;
 
-.password-input:focus {
-  background: rgba(255, 255, 255, 0.16);
-  border-color: rgba(255, 255, 255, 0.32);
-  box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.05);
-}
-
-.password-input.shake {
-  animation: shake 0.28s linear 2;
-}
-
-@keyframes shake {
-  0% { transform: translateX(0); }
-  25% { transform: translateX(-4px); }
-  50% { transform: translateX(4px); }
-  75% { transform: translateX(-3px); }
-  100% { transform: translateX(0); }
-}
-
-.error-message {
-  min-height: 22px;
-  margin-top: 10px;
-  text-align: center;
-  font-size: 0.92rem;
-  letter-spacing: 0.16em;
-  text-transform: lowercase;
-  color: rgba(255, 255, 255, 0.92);
-  opacity: 0;
-  transition: opacity 0.25s ease;
-}
-
-.error-message.show {
-  opacity: 1;
-}
-
-.hidden {
-  opacity: 0;
-  pointer-events: none;
-}
-
-/* Story */
-.story-screen {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 7vh 7vw;
-  opacity: 1;
-  transition: opacity 0.8s ease;
-}
-
-.story-inner {
-  width: min(100%, 820px);
-  text-align: justify;
-  text-align-last: right;
-  direction: rtl;
-}
-
-.story-line {
-  font-size: clamp(1.2rem, 2.4vw, 2rem);
-  line-height: 1.95;
-  color: #fff;
-  text-shadow: 0 0 18px rgba(0, 0, 0, 0.75);
-  white-space: pre-line;
-  margin-bottom: 1.1em;
-}
-
-.story-line.final-line {
-  margin-top: 0.6em;
-}
-
-/* After unlock */
-body.unlocked .background-layer {
-  opacity: 1;
-  filter: blur(1px);
-  transform: scale(1.03);
-}
-
-body.unlocked .background-overlay {
-  background: rgba(0, 0, 0, 0.82);
-}
-
-body.unlocked .login-section {
-  opacity: 0;
-  transform: translateY(10px);
-  pointer-events: none;
-}
-
-/* Mobile */
-@media (max-width: 640px) {
-  .password-input {
-    width: min(86vw, 320px);
-    padding: 14px 16px;
-  }
-
-  .story-screen {
-    padding: 8vh 8vw;
-  }
-
-  .story-line {
-    font-size: clamp(1.15rem, 4.8vw, 1.5rem);
-    line-height: 1.95;
-    margin-bottom: 1em;
+    await wait(delay);
   }
 }
