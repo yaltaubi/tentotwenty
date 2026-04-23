@@ -1,34 +1,265 @@
-async function playStorySequence() {
-  storyInner.innerHTML = "";
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
-  for (const item of storySequence) {
-    const line = document.createElement("p");
-    line.className = "story-line";
-    if (item.final) line.classList.add("final-line");
+html,
+body {
+  width: 100%;
+  height: 100%;
+}
 
-    storyInner.appendChild(line);
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  overflow: hidden;
+  background: #000;
+  color: #fff;
+  position: relative;
+}
 
-    await typeArabicText(line, item.text, 34);
+/* Background */
+.background-layer {
+  position: fixed;
+  inset: 0;
+  background-image: url("leopard-bg.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  transform: scale(1.1);
+  animation: backgroundDrift 22s ease-in-out infinite alternate;
+  transition: opacity 1.2s ease, filter 1.2s ease, transform 1.2s ease;
+  z-index: 0;
+}
 
-    line.classList.add("done");
+.background-overlay {
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 45%, rgba(255, 255, 255, 0.06), transparent 34%),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.68), rgba(0, 0, 0, 0.9));
+  transition: background 1.2s ease, opacity 1.2s ease;
+  z-index: 1;
+}
 
-    await wait(item.waitAfter);
+@keyframes backgroundDrift {
+  0% {
+    transform: scale(1.1) translate3d(0, 0, 0);
+  }
+  50% {
+    transform: scale(1.13) translate3d(-10px, -7px, 0);
+  }
+  100% {
+    transform: scale(1.11) translate3d(9px, 7px, 0);
   }
 }
 
-async function typeArabicText(element, text, speed = 34) {
-  element.textContent = "";
+.app {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+}
 
-  for (let i = 0; i < text.length; i++) {
-    element.textContent += text[i];
+/* Password */
+.login-section {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 24px;
+  opacity: 1;
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
 
-    const char = text[i];
-    let delay = speed;
+.password-input {
+  width: min(82vw, 360px);
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  padding: 15px 20px;
+  font-size: 16px;
+  text-align: center;
+  outline: none;
+  backdrop-filter: blur(10px);
+  -webkit-tap-highlight-color: transparent;
+  box-shadow:
+    0 16px 45px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition: all 0.35s ease;
+}
 
-    if (char === "…") delay = 260;
-    if (char === "؟" || char === "." || char === "،") delay = 180;
-    if (char === "\n") delay = 300;
+.password-input::placeholder {
+  color: rgba(255, 255, 255, 0.64);
+}
 
-    await wait(delay);
+.password-input:focus {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.4);
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.45),
+    0 0 0 7px rgba(255, 255, 255, 0.05);
+}
+
+.password-input.shake {
+  animation: shake 0.28s linear 2;
+}
+
+@keyframes shake {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  50% { transform: translateX(4px); }
+  75% { transform: translateX(-3px); }
+  100% { transform: translateX(0); }
+}
+
+.error-message {
+  min-height: 22px;
+  text-align: center;
+  font-size: 0.9rem;
+  letter-spacing: 0.14em;
+  text-transform: lowercase;
+  color: rgba(255, 255, 255, 0.92);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.error-message.show {
+  opacity: 1;
+}
+
+.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Story */
+.story-screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7vh 7vw;
+  transition: opacity 0.9s ease;
+}
+
+.story-inner {
+  width: min(100%, 840px);
+  direction: rtl;
+  text-align: justify;
+  text-align-last: right;
+  padding: clamp(24px, 4vw, 48px);
+  border-radius: 28px;
+
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.3),
+    rgba(0, 0, 0, 0.12)
+  );
+
+  backdrop-filter: blur(4px);
+
+  box-shadow:
+    0 30px 100px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.story-line {
+  font-size: clamp(1.2rem, 2.4vw, 2rem);
+  line-height: 2;
+  color: #ffffff;
+  white-space: pre-line;
+  margin-bottom: 1.2em;
+
+  text-shadow:
+    0 2px 12px rgba(0, 0, 0, 0.95),
+    0 0 20px rgba(255, 255, 255, 0.05);
+
+  animation: fadeUp 1s ease both;
+}
+
+/* Cursor */
+.story-line::after {
+  content: "";
+  display: inline-block;
+  width: 0.55em;
+  height: 1.15em;
+  margin-right: 0.12em;
+  vertical-align: -0.2em;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 999px;
+  animation: blink 0.85s steps(2, start) infinite;
+}
+
+.story-line.done::after {
+  display: none;
+}
+
+.story-line.final-line {
+  margin-top: 0.8em;
+  font-weight: 600;
+}
+
+/* Animations */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+    filter: blur(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes blink {
+  0%, 45% { opacity: 1; }
+  46%, 100% { opacity: 0; }
+}
+
+/* After unlock */
+body.unlocked .background-layer {
+  filter: blur(1.4px) brightness(0.55) saturate(0.8);
+  transform: scale(1.05);
+}
+
+body.unlocked .background-overlay {
+  background:
+    radial-gradient(circle at 50% 45%, rgba(255, 255, 255, 0.05), transparent 34%),
+    rgba(0, 0, 0, 0.85);
+}
+
+body.unlocked .login-section {
+  opacity: 0;
+  transform: translateY(12px);
+  pointer-events: none;
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  .password-input {
+    width: min(86vw, 320px);
+    padding: 14px 16px;
+  }
+
+  .story-screen {
+    padding: 6vh 5vw;
+  }
+
+  .story-inner {
+    padding: 22px 18px;
+    border-radius: 22px;
+  }
+
+  .story-line {
+    font-size: clamp(1.05rem, 4.5vw, 1.4rem);
+    line-height: 1.9;
   }
 }
