@@ -7,13 +7,22 @@
     content="width=device-width, initial-scale=1.0, viewport-fit=cover"
   />
   <title>One Quarter Closer to Forever</title>
+
+  <!-- Google Font (optional but looks much better for Arabic) -->
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600&display=swap" rel="stylesheet">
+
   <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
+  <!-- Background -->
   <div class="background-layer"></div>
   <div class="background-overlay"></div>
 
+  <!-- App -->
   <main class="app">
+
+    <!-- Password -->
     <section id="login-section" class="login-section">
       <input
         type="password"
@@ -27,9 +36,11 @@
       <div id="error-message" class="error-message"></div>
     </section>
 
+    <!-- Story -->
     <section id="story-screen" class="story-screen hidden" aria-live="polite">
-      <div class="story-inner" id="story-inner"></div>
+      <div id="story-inner" class="story-inner"></div>
     </section>
+
   </main>
 
   <script src="script.js"></script>
