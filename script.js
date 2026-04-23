@@ -1,25 +1,38 @@
-const logo = document.getElementById("logo");
 const loginSection = document.getElementById("login-section");
 const passwordInput = document.getElementById("password-input");
 const errorMessage = document.getElementById("error-message");
+const storyScreen = document.getElementById("story-screen");
+const storyInner = document.getElementById("story-inner");
 
 const correctPassword = "yoru";
 let unlocked = false;
 
-/* Sequence:
-   1. Logo appears
-   2. Logo moves to top
-   3. Password input appears
-*/
-window.addEventListener("load", () => {
-  setTimeout(() => {
-    logo.classList.add("to-top");
-  }, 1800);
+const storySequence = [
+  {
+    text: "حاولت أقيّمك… جلست ساعات وأيام أفكّر وأجرّب، أدور طريقة… لكن ما صار",
+    waitAfter: 1000
+  },
+  {
+    text: "كيف أقيّمك وأنتِ أصلاً فوق التقييم؟\nيعني ألقاها من ايش؟ من ضحكتك الكتكوتة؟\nولا من ابتسامتك اللي ماخذه عقلي؟",
+    waitAfter: 1000
+  },
+  {
+    text: "يقولوا قصص الحب تبدأ بابتسامة…\nوأنا أقول ابتسامتك ما لها بداية ولا نهاية،\nتاخذني عالم ثاني…",
+    waitAfter: 1000
+  },
+  {
+    text: "المهم… كل ثلاثة شهور، وأنتِ عسولتي أكثر من قبل",
+    waitAfter: 2000
+  },
+  {
+    text: "اوه صح… شوفي تحت الكرسي، يمكن تلاقي شي حلو.",
+    waitAfter: 0,
+    final: true
+  }
+];
 
-  setTimeout(() => {
-    loginSection.classList.remove("hidden");
-    passwordInput.focus();
-  }, 2750);
+window.addEventListener("load", () => {
+  passwordInput.focus();
 });
 
 passwordInput.addEventListener("keydown", (e) => {
@@ -39,6 +52,12 @@ function checkPassword() {
     document.body.classList.add("unlocked");
     passwordInput.blur();
     passwordInput.disabled = true;
+
+    setTimeout(() => {
+      loginSection.classList.add("hidden");
+      storyScreen.classList.remove("hidden");
+      playStorySequence();
+    }, 850);
   } else {
     showError("peep");
     playPeepSound();
@@ -61,6 +80,27 @@ function triggerShake() {
   passwordInput.classList.remove("shake");
   void passwordInput.offsetWidth;
   passwordInput.classList.add("shake");
+}
+
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function playStorySequence() {
+  storyInner.innerHTML = "";
+
+  for (const item of storySequence) {
+    const line = document.createElement("p");
+    line.className = "story-line";
+    if (item.final) line.classList.add("final-line");
+    line.textContent = item.text;
+
+    storyInner.appendChild(line);
+
+    await wait(250);
+    line.classList.add("show");
+    await wait(item.waitAfter);
+  }
 }
 
 /* Small generated sound, no audio file needed */
