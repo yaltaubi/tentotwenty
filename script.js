@@ -23,6 +23,7 @@ let stage = 1;
 let tries = 3;
 let infinite = false;
 let clueUsed = false;
+let storyPlaying = false;
 
 const games = {
   1: {
@@ -43,18 +44,51 @@ const games = {
   },
   3: {
     answer: "yoru",
-    question: "One more code before the closing message...",
+    question: "What is our Discord server’s name?",
     pattern: "_ _ _ _",
     clue:
       "it’s not “ruyo”, not “yodaina”, and definitely not “rusef”"
   }
 };
 
-const finalStory = [
+const mainStory = [
+  { text: "Friday\nJan 2nd\n2:28 PM", waitAfter: 1000 },
   {
-    text: "from day one…",
+    text: "I sent the first text…\n\nAnd just like that, our ship quietly set sail—\nLittle did we know that it’d rewrite the course of everything, unaware that it would become us.",
+    waitAfter: 3000
+  },
+  { text: "Saturday\nJan 3rd\n3:06 AM", waitAfter: 1000 },
+  {
+    text: "We had our first Discord call\nIt lasted two hours… though i didnt feel it at all\nWe started it singing “Took Her to the O”\nWe went on each other questions تعصر المخ\ndiving into thoughts, into feelings, into each other.\nand just like every moment I spend with you,\nit felt like we slipped beyond time and space\nbecause how could something so short feel so infinite?\nFrom that on…\nWe called again, and again, and again\nhours that felt like minutes,\nminutes I wished would never end\nI loved every second\njust like I always do with you, my love.",
+    waitAfter: 3000
+  },
+  { text: "Friday\nJan 9th\n6:42 PM", waitAfter: 1000 },
+  {
+    text: "حيل جنوبي - مقابل 3RD Street Donuts\nOur first meetup\nI printed a photo of you at 23:28,\nYou don’t like that one…\nbut I do\nI love it not just for what it holds,\nnot just for the memory stitched into it\nbut because it’s you\nAnd my baby…\nyou’ve always been perfect to me",
+    waitAfter: 3000
+  },
+  {
+    text: "I rate that week\n99999999999+/10\nno no no\n∞ / 10",
     waitAfter: 2000
   },
+  { text: "كيف أقيّمك وأنتِ أصلاً فوق التقييم؟", waitAfter: 1000 },
+  {
+    text: "يعني ألقاها من ايش؟ من ضحكتك الكتكوتة؟\nولا من ابتسامتك اللي ماخذه عقلي؟",
+    waitAfter: 2000
+  },
+  {
+    text: "يقولوا قصص الحب تبدأ بابتسامة…\nوأنا أقول ابتسامتك ما لها بداية ولا نهاية،\nتاخذني عالم ثاني…",
+    waitAfter: 2000
+  },
+  { text: "المهم… كل ثلاثة شهور، وأنتِ عسولتي أكثر من قبل.", waitAfter: 1000 },
+  {
+    text: "أحبك أحبك أحبك وأموت فيكي وأعشقك، وجودك أحلى شي فحياتي.",
+    waitAfter: 0
+  }
+];
+
+const closingStory = [
+  { text: "from day one…", waitAfter: 2000 },
   {
     text: "I fell in love with the novelty of us,\nthe thrill in every outing,\nlike the world kept reshaping itself just to fit us better.",
     waitAfter: 3000
@@ -71,14 +105,8 @@ const finalStory = [
     text: "your sandwiches… your hot chocolate…\nsomehow tasting like how i’ve always wanted,\nlike love was always meant to be this simple.",
     waitAfter: 3000
   },
-  {
-    text: "cake wednesdays with you,",
-    waitAfter: 3000
-  },
-  {
-    text: "you teaching me overwatch",
-    waitAfter: 3000
-  },
+  { text: "cake wednesdays with you,", waitAfter: 3000 },
+  { text: "you teaching me overwatch", waitAfter: 3000 },
   {
     text: "steak and fries, orange and mango,\nbut it was never about the food…\nit was always about you.",
     waitAfter: 3000
@@ -87,78 +115,18 @@ const finalStory = [
     text: "ramadan nights…\nunforgettable\nevery night somehow feeling just as special as the last.",
     waitAfter: 3000
   },
-  {
-    text: "karata games,",
-    waitAfter: 3000
-  },
+  { text: "karata games,", waitAfter: 3000 },
   {
     text: "us under the rain…\njust us, soaked, but the world is ours.",
     waitAfter: 3000
   },
-  {
-    text: "apartment hunting with you,",
-    waitAfter: 3000
-  },
-  {
-    text: "discord nights,",
-    waitAfter: 3000
-  },
+  { text: "apartment hunting with you,", waitAfter: 3000 },
+  { text: "discord nights,", waitAfter: 3000 },
   {
     text: "and through all of it…\nI’m not just holding onto what we’ve had,\nI’m looking forward to everything",
     waitAfter: 1000
   },
-  {
-    text: "with you…",
-    waitAfter: 3000
-  },
-  {
-    text: "Friday\nJan 2nd\n2:28 PM",
-    waitAfter: 1000
-  },
-  {
-    text: "I sent the first text…\n\nAnd just like that, our ship quietly set sail—\nLittle did we know that it’d rewrite the course of everything, unaware that it would become us.",
-    waitAfter: 3000
-  },
-  {
-    text: "Saturday\nJan 3rd\n3:06 AM",
-    waitAfter: 1000
-  },
-  {
-    text: "We had our first Discord call\nIt lasted two hours… though i didnt feel it at all\nWe started it singing “Took Her to the O”\nWe went on each other questions تعصر المخ\ndiving into thoughts, into feelings, into each other.\nand just like every moment I spend with you,\nit felt like we slipped beyond time and space\nbecause how could something so short feel so infinite?\nFrom that on…\nWe called again, and again, and again\nhours that felt like minutes,\nminutes I wished would never end\nI loved every second\njust like I always do with you, my love.",
-    waitAfter: 3000
-  },
-  {
-    text: "Friday\nJan 9th\n6:42 PM",
-    waitAfter: 1000
-  },
-  {
-    text: "حيل جنوبي - مقابل 3RD Street Donuts\nOur first meetup\nI printed a photo of you at 23:28,\nYou don’t like that one…\nbut I do\nI love it not just for what it holds,\nnot just for the memory stitched into it\nbut because it’s you\nAnd my baby…\nyou’ve always been perfect to me",
-    waitAfter: 3000
-  },
-  {
-    text: "I rate that week\n99999999999+/10\nno no no\n∞ / 10",
-    waitAfter: 2000
-  },
-  {
-    text: "كيف أقيّمك وأنتِ أصلاً فوق التقييم؟",
-    waitAfter: 1000
-  },
-  {
-    text: "يعني ألقاها من ايش؟ من ضحكتك الكتكوتة؟\nولا من ابتسامتك اللي ماخذه عقلي؟",
-    waitAfter: 2000
-  },
-  {
-    text: "يقولوا قصص الحب تبدأ بابتسامة…\nوأنا أقول ابتسامتك ما لها بداية ولا نهاية،\nتاخذني عالم ثاني…",
-    waitAfter: 2000
-  },
-  {
-    text: "المهم… كل ثلاثة شهور، وأنتِ عسولتي أكثر من قبل.",
-    waitAfter: 1000
-  },
-  {
-    text: "أحبك أحبك أحبك وأموت فيكي وأعشقك، وجودك أحلى شي فحياتي.",
-    waitAfter: 0
-  }
+  { text: "with you…", waitAfter: 0 }
 ];
 
 window.addEventListener("load", () => {
@@ -168,10 +136,7 @@ window.addEventListener("load", () => {
 skipBtn.addEventListener("click", () => {
   introScreen.classList.add("hidden");
   gameScreen.classList.remove("hidden");
-
-  setTimeout(() => {
-    input.focus();
-  }, 300);
+  setTimeout(() => input.focus(), 300);
 });
 
 submitBtn.addEventListener("click", checkAnswer);
@@ -189,13 +154,9 @@ popupBtn.addEventListener("click", () => {
 
 nextBtn.addEventListener("click", () => {
   splitScreen.classList.add("hidden");
-  stage = 3;
-  loadGame();
-  gameScreen.classList.remove("hidden");
-
-  setTimeout(() => {
-    input.focus();
-  }, 300);
+  storyScreen.classList.remove("hidden");
+  document.body.classList.add("story-mode");
+  playStory(mainStory, showYoruButton);
 });
 
 function loadGame() {
@@ -247,7 +208,10 @@ function checkAnswer() {
     }
 
     if (stage === 3) {
-      finishFinalGame();
+      gameScreen.classList.add("hidden");
+      storyScreen.classList.remove("hidden");
+      document.body.classList.add("story-mode");
+      playStory(closingStory);
       return;
     }
   }
@@ -255,11 +219,25 @@ function checkAnswer() {
   wrongAnswer();
 }
 
-function finishFinalGame() {
-  gameScreen.classList.add("hidden");
-  storyScreen.classList.remove("hidden");
-  document.body.classList.add("story-mode");
-  playFinalStory();
+function showYoruButton() {
+  const btn = document.createElement("button");
+  btn.className = "next-btn";
+  btn.textContent = "next";
+
+  btn.addEventListener("click", () => {
+    storyScreen.classList.add("hidden");
+    storyInner.innerHTML = "";
+    stage = 3;
+    loadGame();
+    gameScreen.classList.remove("hidden");
+    document.body.classList.remove("story-mode");
+    document.body.classList.add("video-on");
+
+    setTimeout(() => input.focus(), 300);
+  });
+
+  storyInner.appendChild(btn);
+  scrollStoryToBottom();
 }
 
 function wrongAnswer() {
@@ -269,7 +247,7 @@ function wrongAnswer() {
   if (!infinite) {
     tries--;
     updateTries();
-    showStakesAnimation();
+    showSteaksAnimation();
   }
 
   messageEl.textContent = "peep";
@@ -287,7 +265,7 @@ function useClue() {
   if (!clueUsed && !infinite) {
     tries--;
     updateTries();
-    showStakesAnimation();
+    showSteaksAnimation();
   }
 
   clueUsed = true;
@@ -307,7 +285,7 @@ function showGiftPopup() {
   popup.classList.remove("hidden");
 }
 
-function showStakesAnimation() {
+function showSteaksAnimation() {
   document.body.classList.remove("try-lost");
   stakesText.classList.remove("show");
 
@@ -340,10 +318,13 @@ function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function playFinalStory() {
+async function playStory(storyArray, onComplete) {
+  if (storyPlaying) return;
+  storyPlaying = true;
+
   storyInner.innerHTML = "";
 
-  for (const item of finalStory) {
+  for (const item of storyArray) {
     const line = document.createElement("p");
     line.className = "story-line";
 
@@ -361,6 +342,12 @@ async function playFinalStory() {
 
     await wait(item.waitAfter);
   }
+
+  storyPlaying = false;
+
+  if (typeof onComplete === "function") {
+    onComplete();
+  }
 }
 
 async function typeText(element, text, speed = 32) {
@@ -369,9 +356,7 @@ async function typeText(element, text, speed = 32) {
   for (let i = 0; i < text.length; i++) {
     element.textContent += text[i];
 
-    if (i % 12 === 0) {
-      scrollStoryToBottom();
-    }
+    if (i % 12 === 0) scrollStoryToBottom();
 
     const char = text[i];
     let delay = speed;
@@ -400,7 +385,6 @@ function isMostlyArabic(text) {
   return arabicChars.length > englishChars.length;
 }
 
-/* Sounds */
 function playPeepSound() {
   playTone(880, 0.16, 0.07);
 }
