@@ -43,7 +43,7 @@ const games = {
   },
   3: {
     answer: "yoru",
-    question: "One more code before the real message...",
+    question: "One more code before the closing message...",
     pattern: "_ _ _ _",
     clue:
       "it’s not “ruyo”, not “yodaina”, and definitely not “rusef”"
@@ -189,9 +189,13 @@ popupBtn.addEventListener("click", () => {
 
 nextBtn.addEventListener("click", () => {
   splitScreen.classList.add("hidden");
-  storyScreen.classList.remove("hidden");
-  document.body.classList.add("story-mode");
-  playFinalStory();
+  stage = 3;
+  loadGame();
+  gameScreen.classList.remove("hidden");
+
+  setTimeout(() => {
+    input.focus();
+  }, 300);
 });
 
 function loadGame() {
@@ -223,19 +227,39 @@ function checkAnswer() {
   if (value === correct) {
     playSuccessSound();
 
-    if (stage < 3) {
-      stage++;
+    if (stage === 1) {
+      stage = 2;
       loadGame();
       messageEl.textContent = "passed. next one.";
       input.focus();
       return;
     }
 
-    finishGames();
-    return;
+    if (stage === 2) {
+      gameScreen.classList.add("hidden");
+      document.body.classList.add("video-on");
+
+      setTimeout(() => {
+        splitScreen.classList.remove("hidden");
+      }, 900);
+
+      return;
+    }
+
+    if (stage === 3) {
+      finishFinalGame();
+      return;
+    }
   }
 
   wrongAnswer();
+}
+
+function finishFinalGame() {
+  gameScreen.classList.add("hidden");
+  storyScreen.classList.remove("hidden");
+  document.body.classList.add("story-mode");
+  playFinalStory();
 }
 
 function wrongAnswer() {
@@ -277,15 +301,6 @@ function useClue() {
   }
 
   input.focus();
-}
-
-function finishGames() {
-  gameScreen.classList.add("hidden");
-  document.body.classList.add("video-on");
-
-  setTimeout(() => {
-    splitScreen.classList.remove("hidden");
-  }, 900);
 }
 
 function showGiftPopup() {
@@ -337,13 +352,11 @@ async function playFinalStory() {
     line.style.textAlign = arabic ? "right" : "left";
 
     storyInner.appendChild(line);
-
     scrollStoryToBottom();
 
     await typeText(line, item.text, 32);
 
     line.classList.add("done");
-
     scrollStoryToBottom();
 
     await wait(item.waitAfter);
