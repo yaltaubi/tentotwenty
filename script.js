@@ -1,3 +1,6 @@
+const introScreen = document.getElementById("intro-screen");
+const skipBtn = document.getElementById("skip-btn");
+
 const input = document.getElementById("answer-input");
 const triesEl = document.getElementById("tries");
 const questionEl = document.getElementById("question");
@@ -14,6 +17,7 @@ const storyInner = document.getElementById("story-inner");
 const popup = document.getElementById("popup");
 const popupBtn = document.getElementById("popup-btn");
 const nextBtn = document.getElementById("next-btn");
+const stakesText = document.getElementById("stakes-text");
 
 let stage = 1;
 let tries = 3;
@@ -36,10 +40,77 @@ const games = {
     pattern: "_ _ _ _",
     clue:
       "To one of you, it lives between us as an edgy joke,\nto the other, it’s a phase we’ve lived."
+  },
+  3: {
+    answer: "yoru",
+    question: "One more code before the real message...",
+    pattern: "_ _ _ _",
+    clue:
+      "it’s not “ruyo”, not “yodaina”, and definitely not “rusef”"
   }
 };
 
 const finalStory = [
+  {
+    text: "from day one…",
+    waitAfter: 2000
+  },
+  {
+    text: "I fell in love with the novelty of us,\nthe thrill in every outing,\nlike the world kept reshaping itself just to fit us better.",
+    waitAfter: 3000
+  },
+  {
+    text: "the way our souls don’t just meet…\nthey recognize,\nthey lean into each other like they’ve been waiting.",
+    waitAfter: 3000
+  },
+  {
+    text: "and me\ngetting lost, again and again,\ndrowning in your eyes\nlike it’s the only place I was ever meant to be.",
+    waitAfter: 3000
+  },
+  {
+    text: "your sandwiches… your hot chocolate…\nsomehow tasting like how i’ve always wanted,\nlike love was always meant to be this simple.",
+    waitAfter: 3000
+  },
+  {
+    text: "cake wednesdays with you,",
+    waitAfter: 3000
+  },
+  {
+    text: "you teaching me overwatch",
+    waitAfter: 3000
+  },
+  {
+    text: "steak and fries, orange and mango,\nbut it was never about the food…\nit was always about you.",
+    waitAfter: 3000
+  },
+  {
+    text: "ramadan nights…\nunforgettable\nevery night somehow feeling just as special as the last.",
+    waitAfter: 3000
+  },
+  {
+    text: "karata games,",
+    waitAfter: 3000
+  },
+  {
+    text: "us under the rain…\njust us, soaked, but the world is ours.",
+    waitAfter: 3000
+  },
+  {
+    text: "apartment hunting with you,",
+    waitAfter: 3000
+  },
+  {
+    text: "discord nights,",
+    waitAfter: 3000
+  },
+  {
+    text: "and through all of it…\nI’m not just holding onto what we’ve had,\nI’m looking forward to everything",
+    waitAfter: 1000
+  },
+  {
+    text: "with you…",
+    waitAfter: 3000
+  },
   {
     text: "Friday\nJan 2nd\n2:28 PM",
     waitAfter: 1000
@@ -92,7 +163,15 @@ const finalStory = [
 
 window.addEventListener("load", () => {
   loadGame();
-  input.focus();
+});
+
+skipBtn.addEventListener("click", () => {
+  introScreen.classList.add("hidden");
+  gameScreen.classList.remove("hidden");
+
+  setTimeout(() => {
+    input.focus();
+  }, 300);
 });
 
 submitBtn.addEventListener("click", checkAnswer);
@@ -125,8 +204,8 @@ function loadGame() {
   questionEl.textContent = game.question;
   messageEl.textContent = "";
   input.value = "";
-
   clueBtn.textContent = "Take a clue";
+
   updateTries();
 
   if (game.pattern) {
@@ -144,10 +223,11 @@ function checkAnswer() {
   if (value === correct) {
     playSuccessSound();
 
-    if (stage === 1) {
-      stage = 2;
+    if (stage < 3) {
+      stage++;
       loadGame();
       messageEl.textContent = "passed. next one.";
+      input.focus();
       return;
     }
 
@@ -165,6 +245,7 @@ function wrongAnswer() {
   if (!infinite) {
     tries--;
     updateTries();
+    showStakesAnimation();
   }
 
   messageEl.textContent = "peep";
@@ -182,14 +263,12 @@ function useClue() {
   if (!clueUsed && !infinite) {
     tries--;
     updateTries();
+    showStakesAnimation();
   }
 
   clueUsed = true;
   messageEl.textContent = games[stage].clue;
-  clueBtn.textContent =
-    stage === 1
-      ? "maybe ask her yourself"
-      : "clue used";
+  clueBtn.textContent = stage === 1 ? "maybe ask her yourself" : "clue used";
 
   if (tries <= 0 && !infinite) {
     infinite = true;
@@ -211,6 +290,21 @@ function finishGames() {
 
 function showGiftPopup() {
   popup.classList.remove("hidden");
+}
+
+function showStakesAnimation() {
+  document.body.classList.remove("try-lost");
+  stakesText.classList.remove("show");
+
+  void document.body.offsetWidth;
+
+  document.body.classList.add("try-lost");
+  stakesText.classList.add("show");
+
+  setTimeout(() => {
+    document.body.classList.remove("try-lost");
+    stakesText.classList.remove("show");
+  }, 1300);
 }
 
 function updateTries() {
@@ -237,14 +331,20 @@ async function playFinalStory() {
   for (const item of finalStory) {
     const line = document.createElement("p");
     line.className = "story-line";
-    line.dir = containsArabic(item.text) ? "rtl" : "ltr";
-    line.style.textAlign = containsArabic(item.text) ? "right" : "left";
+
+    const arabic = isMostlyArabic(item.text);
+    line.dir = arabic ? "rtl" : "ltr";
+    line.style.textAlign = arabic ? "right" : "left";
 
     storyInner.appendChild(line);
+
+    scrollStoryToBottom();
 
     await typeText(line, item.text, 32);
 
     line.classList.add("done");
+
+    scrollStoryToBottom();
 
     await wait(item.waitAfter);
   }
@@ -255,6 +355,10 @@ async function typeText(element, text, speed = 32) {
 
   for (let i = 0; i < text.length; i++) {
     element.textContent += text[i];
+
+    if (i % 12 === 0) {
+      scrollStoryToBottom();
+    }
 
     const char = text[i];
     let delay = speed;
@@ -269,8 +373,18 @@ async function typeText(element, text, speed = 32) {
   }
 }
 
-function containsArabic(text) {
-  return /[\u0600-\u06FF]/.test(text);
+function scrollStoryToBottom() {
+  storyScreen.scrollTo({
+    top: storyScreen.scrollHeight,
+    behavior: "smooth"
+  });
+}
+
+function isMostlyArabic(text) {
+  const arabicChars = text.match(/[\u0600-\u06FF]/g) || [];
+  const englishChars = text.match(/[A-Za-z]/g) || [];
+
+  return arabicChars.length > englishChars.length;
 }
 
 /* Sounds */
