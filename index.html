@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>One Quarter Closer to Forever</title>
 
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>❤️</text></svg>">
+
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -14,7 +16,21 @@
   <div class="background-overlay"></div>
 
   <main class="app">
-    <section id="game-screen" class="game-screen">
+
+    <!-- Intro Message -->
+    <section id="intro-screen" class="split-screen">
+      <div class="split-card">
+        <p>
+          this would look better and be easier on a bigger screen, am i right?<br><br>
+          check behind you… I think there’s something that could help.
+        </p>
+
+        <button id="skip-btn" class="next-btn">skip</button>
+      </div>
+    </section>
+
+    <!-- Games -->
+    <section id="game-screen" class="game-screen hidden">
       <div class="game-card">
         <div id="tries" class="tries">3 tries</div>
 
@@ -44,6 +60,8 @@
         <button id="popup-btn">continue</button>
       </div>
     </div>
+
+    <div id="stakes-text" class="stakes-text">the stakes got higher…</div>
 
     <section id="split-screen" class="split-screen hidden">
       <div class="split-card">
