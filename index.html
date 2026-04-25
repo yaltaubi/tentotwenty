@@ -2,52 +2,75 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>One Quarter Closer to Forever</title>
 
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
-
-  <!-- Background -->
+  <!-- Backgrounds -->
   <div class="background-layer"></div>
-  <video id="bg-video" class="bg-video hidden" autoplay loop muted playsinline>
-    <source src="8bitvid.mp4" type="video/mp4">
+
+  <video id="bg-video" class="bg-video" autoplay loop muted playsinline>
+    <source src="8bitvid.mp4" type="video/mp4" />
   </video>
+
   <div class="background-overlay"></div>
 
   <main class="app">
+    <!-- Game Screen -->
+    <section id="game-screen" class="game-screen">
+      <div class="game-card">
+        <div id="tries" class="tries">3 tries</div>
 
-    <!-- GAME -->
-    <section id="game-screen" class="login-section">
-      <div class="tries" id="tries">3</div>
+        <p id="question" class="question"></p>
+        <p id="pattern" class="pattern hidden"></p>
 
-      <input id="input" class="password-input" placeholder="..." />
+        <input
+          id="answer-input"
+          class="answer-input"
+          placeholder="type here"
+          autocomplete="off"
+          autocapitalize="none"
+          spellcheck="false"
+        />
 
-      <button id="clue-btn" class="clue-btn">Clue</button>
+        <button id="submit-btn" class="main-btn">Enter</button>
+        <button id="clue-btn" class="clue-btn">Take a clue</button>
 
-      <div id="error" class="error-message"></div>
-    </section>
-
-    <!-- MESSAGE -->
-    <section id="message-screen" class="story-screen hidden">
-      <div class="story-inner">
-        <p>
-          this is gonna be a personal message,<br><br>
-          thank you snoopy for the help you did your part and more,<br>
-          it's time for us to split.
-        </p>
-        <button id="next-btn" class="next-btn">Next</button>
+        <p id="message" class="message"></p>
       </div>
     </section>
 
-    <!-- FINAL STORY -->
+    <!-- Cute Popup -->
+    <div id="popup" class="popup hidden">
+      <div class="popup-card">
+        <p>gift from me 🎁</p>
+        <span>you get one more try… actually, unlimited now</span>
+        <button id="popup-btn">continue</button>
+      </div>
+    </div>
+
+    <!-- Split Message -->
+    <section id="split-screen" class="split-screen hidden">
+      <div class="split-card">
+        <p>
+          this is gonna be a personal message,<br><br>
+          thank you snoopy for the help<br>
+          you did your part and more,<br><br>
+          it's time for us to split.
+        </p>
+
+        <button id="next-btn" class="next-btn">next</button>
+      </div>
+    </section>
+
+    <!-- Final Story -->
     <section id="story-screen" class="story-screen hidden">
       <div id="story-inner" class="story-inner"></div>
     </section>
-
   </main>
 
   <script src="script.js"></script>
