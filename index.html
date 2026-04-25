@@ -2,42 +2,49 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-  />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>One Quarter Closer to Forever</title>
 
-  <!-- Google Font (optional but looks much better for Arabic) -->
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600&display=swap" rel="stylesheet">
-
   <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
+
   <!-- Background -->
   <div class="background-layer"></div>
+  <video id="bg-video" class="bg-video hidden" autoplay loop muted playsinline>
+    <source src="8bitvid.mp4" type="video/mp4">
+  </video>
   <div class="background-overlay"></div>
 
-  <!-- App -->
   <main class="app">
 
-    <!-- Password -->
-    <section id="login-section" class="login-section">
-      <input
-        type="password"
-        id="password-input"
-        class="password-input"
-        placeholder="Password"
-        autocomplete="off"
-        autocapitalize="none"
-        spellcheck="false"
-      />
-      <div id="error-message" class="error-message"></div>
+    <!-- GAME -->
+    <section id="game-screen" class="login-section">
+      <div class="tries" id="tries">3</div>
+
+      <input id="input" class="password-input" placeholder="..." />
+
+      <button id="clue-btn" class="clue-btn">Clue</button>
+
+      <div id="error" class="error-message"></div>
     </section>
 
-    <!-- Story -->
-    <section id="story-screen" class="story-screen hidden" aria-live="polite">
+    <!-- MESSAGE -->
+    <section id="message-screen" class="story-screen hidden">
+      <div class="story-inner">
+        <p>
+          this is gonna be a personal message,<br><br>
+          thank you snoopy for the help you did your part and more,<br>
+          it's time for us to split.
+        </p>
+        <button id="next-btn" class="next-btn">Next</button>
+      </div>
+    </section>
+
+    <!-- FINAL STORY -->
+    <section id="story-screen" class="story-screen hidden">
       <div id="story-inner" class="story-inner"></div>
     </section>
 
