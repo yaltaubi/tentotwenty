@@ -1,158 +1,143 @@
-const loginSection = document.getElementById("login-section");
-const passwordInput = document.getElementById("password-input");
-const errorMessage = document.getElementById("error-message");
+const input = document.getElementById("input");
+const triesEl = document.getElementById("tries");
+const error = document.getElementById("error");
+const clueBtn = document.getElementById("clue-btn");
+
+const gameScreen = document.getElementById("game-screen");
+const messageScreen = document.getElementById("message-screen");
 const storyScreen = document.getElementById("story-screen");
 const storyInner = document.getElementById("story-inner");
 
-const correctPassword = "yoru";
-let unlocked = false;
+const video = document.getElementById("bg-video");
 
-/* Your story with updated timing */
-const storySequence = [
-  {
-    text: "حاولت أقيّمك… جلست ساعات وأيام أفكّر وأجرّب، أدور طريقة… لكن ما صار :(",
-    waitAfter: 2000
-  },
-  {
-    text: "كيف أقيّمك وأنتِ أصلاً فوق التقييم؟",
-    waitAfter: 1000
-  },
-  {
-    text: "يعني ألقاها من ايش؟ من ضحكتك الكتكوتة؟\nولا من ابتسامتك اللي ماخذه عقلي؟",
-    waitAfter: 2000
-  },
-  {
-    text: "يقولوا قصص الحب تبدأ بابتسامة…\nوأنا أقول ابتسامتك ما لها بداية ولا نهاية،\nتاخذني عالم ثاني…",
-    waitAfter: 2000
-  },
-  {
-    text: "المهم… كل ثلاثة شهور، وأنتِ عسولتي أكثر من قبل.\nأحبك أحبك أحبك وأموت فيكي وأعشقك، وجودك أحلى شي فحياتي.\nتعالي كليوم…",
-    waitAfter: 3000
-  },
-  {
-    text: "اوه صح… شوفي تحت الكرسي، يمكن تلاقي شي حلو.",
-    waitAfter: 0,
-    final: true
+let stage = 1;
+let tries = 3;
+let infinite = false;
+
+/* ---------- INPUT ---------- */
+input.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") check();
+});
+
+/* ---------- CHECK ---------- */
+function check() {
+  const val = input.value.trim().toLowerCase();
+
+  if (stage === 1) {
+    if (val === "snoopy") return nextStage();
+    wrong();
   }
+
+  if (stage === 2) {
+    if (val === "ship") return finishGames();
+    wrong();
+  }
+}
+
+/* ---------- WRONG ---------- */
+function wrong() {
+  if (!infinite) {
+    tries--;
+    updateTries();
+  }
+
+  error.textContent = "peep";
+
+  if (tries <= 0 && !infinite) {
+    infinite = true;
+    popup("هدية بسيطة… فرصة إضافية لا نهائية 🎁");
+  }
+}
+
+/* ---------- CLUE ---------- */
+clueBtn.onclick = () => {
+  if (!infinite) {
+    tries--;
+    updateTries();
+  }
+
+  if (stage === 1) {
+    error.textContent =
+      "Not everything is a matter of chance\nsometimes someone quietly brings two worlds closer…\nwhat‘s the nickname?";
+  }
+
+  if (stage === 2) {
+    error.textContent =
+      "Four letters. Familiar to both of you, just not for the same reason.";
+  }
+
+  clueBtn.textContent =
+    "If you don’t know the answer… maybe you should ask her yourself";
+};
+
+/* ---------- UPDATE TRIES ---------- */
+function updateTries() {
+  triesEl.textContent = infinite ? "∞" : tries;
+}
+
+/* ---------- NEXT STAGE ---------- */
+function nextStage() {
+  stage = 2;
+  tries = 3;
+  infinite = false;
+  updateTries();
+
+  input.value = "";
+  error.textContent = "_ _ _ _";
+}
+
+/* ---------- FINISH ---------- */
+function finishGames() {
+  gameScreen.classList.add("hidden");
+
+  video.classList.remove("hidden");
+
+  setTimeout(() => {
+    messageScreen.classList.remove("hidden");
+  }, 1000);
+}
+
+/* ---------- NEXT BUTTON ---------- */
+document.getElementById("next-btn").onclick = () => {
+  messageScreen.classList.add("hidden");
+  storyScreen.classList.remove("hidden");
+  playStory();
+};
+
+/* ---------- POPUP ---------- */
+function popup(text) {
+  alert(text);
+}
+
+/* ---------- STORY ---------- */
+const story = [
+  "Friday\nJan 2nd\n2:28 PM\n\nI sent the first text…",
+  "And just like that, our ship quietly set sail—\nLittle did we know...",
+  "We had our first Discord call...",
+  "Our first meetup...",
+  "∞ / 10",
 ];
 
-window.addEventListener("load", () => {
-  passwordInput.focus();
-});
+async function playStory() {
+  for (let line of story) {
+    const p = document.createElement("p");
+    p.className = "story-line";
+    storyInner.appendChild(p);
 
-passwordInput.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") {
-    checkPassword();
-  }
-});
-
-function checkPassword() {
-  if (unlocked) return;
-
-  const enteredPassword = passwordInput.value.trim().toLowerCase();
-
-  if (enteredPassword === correctPassword.toLowerCase()) {
-    unlocked = true;
-    clearError();
-    document.body.classList.add("unlocked");
-    passwordInput.blur();
-    passwordInput.disabled = true;
-
-    setTimeout(() => {
-      loginSection.classList.add("hidden");
-      storyScreen.classList.remove("hidden");
-      playStorySequence();
-    }, 850);
-  } else {
-    showError("peep");
-    playPeepSound();
-    triggerShake();
-    passwordInput.select();
+    await type(p, line);
+    await wait(2000);
   }
 }
 
-function showError(text) {
-  errorMessage.textContent = text;
-  errorMessage.classList.add("show");
-}
-
-function clearError() {
-  errorMessage.textContent = "";
-  errorMessage.classList.remove("show");
-}
-
-function triggerShake() {
-  passwordInput.classList.remove("shake");
-  void passwordInput.offsetWidth;
-  passwordInput.classList.add("shake");
-}
-
-function wait(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-/* Smooth story playback */
-async function playStorySequence() {
-  storyInner.innerHTML = "";
-
-  for (const item of storySequence) {
-    const line = document.createElement("p");
-    line.className = "story-line";
-    if (item.final) line.classList.add("final-line");
-
-    storyInner.appendChild(line);
-
-    await typeArabicText(line, item.text, 34);
-
-    line.classList.add("done");
-
-    await wait(item.waitAfter);
-  }
-}
-
-/* Improved typewriter with natural pauses */
-async function typeArabicText(element, text, speed = 34) {
-  element.textContent = "";
-
+/* ---------- TYPE ---------- */
+async function type(el, text) {
   for (let i = 0; i < text.length; i++) {
-    element.textContent += text[i];
-
-    const char = text[i];
-    let delay = speed;
-
-    if (char === "…") delay = 260;
-    if (char === "؟") delay = 220;
-    if (char === "،") delay = 160;
-    if (char === ".") delay = 180;
-    if (char === "\n") delay = 300;
-
-    await wait(delay);
+    el.textContent += text[i];
+    await wait(30);
   }
 }
 
-/* Small sound */
-function playPeepSound() {
-  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-  if (!AudioContextClass) return;
-
-  const ctx = new AudioContextClass();
-  const oscillator = ctx.createOscillator();
-  const gainNode = ctx.createGain();
-
-  oscillator.type = "sine";
-  oscillator.frequency.setValueAtTime(880, ctx.currentTime);
-
-  gainNode.gain.setValueAtTime(0.0001, ctx.currentTime);
-  gainNode.gain.exponentialRampToValueAtTime(0.07, ctx.currentTime + 0.01);
-  gainNode.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.16);
-
-  oscillator.connect(gainNode);
-  gainNode.connect(ctx.destination);
-
-  oscillator.start();
-  oscillator.stop(ctx.currentTime + 0.17);
-
-  oscillator.onended = () => {
-    ctx.close();
-  };
+/* ---------- WAIT ---------- */
+function wait(ms) {
+  return new Promise(r => setTimeout(r, ms));
 }
