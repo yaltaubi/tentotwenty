@@ -1,419 +1,479 @@
-const introScreen = document.getElementById("intro-screen");
-const skipBtn = document.getElementById("skip-btn");
-
-const input = document.getElementById("answer-input");
-const triesEl = document.getElementById("tries");
-const questionEl = document.getElementById("question");
-const patternEl = document.getElementById("pattern");
-const messageEl = document.getElementById("message");
-const clueBtn = document.getElementById("clue-btn");
-const submitBtn = document.getElementById("submit-btn");
-
+const quizScreen = document.getElementById("quiz-screen");
+const levelScreen = document.getElementById("level-screen");
 const gameScreen = document.getElementById("game-screen");
-const splitScreen = document.getElementById("split-screen");
-const storyScreen = document.getElementById("story-screen");
-const storyInner = document.getElementById("story-inner");
+const teaserScreen = document.getElementById("teaser-screen");
 
-const popup = document.getElementById("popup");
-const popupBtn = document.getElementById("popup-btn");
-const nextBtn = document.getElementById("next-btn");
-const stakesText = document.getElementById("stakes-text");
+const optionsEl = document.getElementById("options");
+const submitQuiz = document.getElementById("submit-quiz");
+const quizMessage = document.getElementById("quiz-message");
 
-let stage = 1;
-let tries = 3;
-let infinite = false;
-let clueUsed = false;
-let storyPlaying = false;
+const levelButtons = document.querySelectorAll(".level-btn");
+const levelMessage = document.getElementById("level-message");
 
-const games = {
+const canvas = document.getElementById("game-canvas");
+const ctx = canvas.getContext("2d");
+
+const gameTitle = document.getElementById("game-title");
+const gameHint = document.getElementById("game-hint");
+const backBtn = document.getElementById("back-btn");
+
+const popup = document.getElementById("complete-popup");
+const completeTitle = document.getElementById("complete-title");
+const completeText = document.getElementById("complete-text");
+const continueBtn = document.getElementById("continue-btn");
+
+const ingredients = [
+  "Grape",
+  "Mango",
+  "Passion",
+  "Orange",
+  "Pomegranate",
+  "Berry",
+  "Peach",
+  "Lemon",
+  "Mint",
+  "Vanilla",
+  "Strawberry",
+  "Cherry"
+];
+
+const correctIngredients = ["Grape", "Passion", "Pomegranate", "Berry"];
+let selectedIngredients = [];
+
+let unlockedLevel = 1;
+let currentLevel = 1;
+let gameRunning = false;
+let keys = {};
+let levelComplete = false;
+
+let cars = [];
+
+const levels = {
   1: {
-    answer: "snoopy",
-    question:
-      "Not everything is a matter of chance\nsometimes someone quietly brings two worlds closer…\nwhat‘s the nickname?",
-    pattern: "",
-    clue:
-      "If you don’t know the answer… maybe you should ask her yourself"
+    title: "LEVEL 1: BEACH DRIVE",
+    hint: "Drive both cars to the beach flag",
+    setting: "beach"
   },
   2: {
-    answer: "ship",
-    question:
-      "Four letters. Familiar to both of you, just not for the same reason.",
-    pattern: "_ _ _ _",
-    clue:
-      "To one of you, it lives between us as an edgy joke,\nto the other, it’s a phase we’ve lived."
+    title: "LEVEL 2: MOUNTAIN CHILL",
+    hint: "Reach the tower, then set the chairs",
+    setting: "mountain"
   },
   3: {
-    answer: "yoru",
-    question: "What is our Discord server’s name?",
-    pattern: "_ _ _ _",
-    clue:
-      "it’s not “ruyo”, not “yodaina”, and definitely not “rusef”"
+    title: "LEVEL 3: ALAM CRUISE",
+    hint: "Sail both boats to the palace view",
+    setting: "cruise"
   }
 };
 
-const mainStory = [
-  { text: "Friday\nJan 2nd\n2:28 PM", waitAfter: 1000 },
-  {
-    text: "I sent the first text…\n\nAnd just like that, our ship quietly set sail—\nLittle did we know that it’d rewrite the course of everything, unaware that it would become us.",
-    waitAfter: 3000
-  },
-  { text: "Saturday\nJan 3rd\n3:06 AM", waitAfter: 1000 },
-  {
-    text: "We had our first Discord call\nIt lasted two hours… though i didnt feel it at all\nWe started it singing “Took Her to the O”\nWe went on each other questions تعصر المخ\ndiving into thoughts, into feelings, into each other.\nand just like every moment I spend with you,\nit felt like we slipped beyond time and space\nbecause how could something so short feel so infinite?\nFrom that on…\nWe called again, and again, and again\nhours that felt like minutes,\nminutes I wished would never end\nI loved every second\njust like I always do with you, my love.",
-    waitAfter: 3000
-  },
-  { text: "Friday\nJan 9th\n6:42 PM", waitAfter: 1000 },
-  {
-    text: "حيل جنوبي - مقابل 3RD Street Donuts\nOur first meetup\nI printed a photo of you at 23:28,\nYou don’t like that one…\nbut I do\nI love it not just for what it holds,\nnot just for the memory stitched into it\nbut because it’s you\nAnd my baby…\nyou’ve always been perfect to me",
-    waitAfter: 3000
-  },
-  {
-    text: "I rate that week\n99999999999+/10\nno no no\n∞ / 10",
-    waitAfter: 2000
-  },
-  { text: "كيف أقيّمك وأنتِ أصلاً فوق التقييم؟", waitAfter: 1000 },
-  {
-    text: "يعني ألقاها من ايش؟ من ضحكتك الكتكوتة؟\nولا من ابتسامتك اللي ماخذه عقلي؟",
-    waitAfter: 2000
-  },
-  {
-    text: "يقولوا قصص الحب تبدأ بابتسامة…\nوأنا أقول ابتسامتك ما لها بداية ولا نهاية،\nتاخذني عالم ثاني…",
-    waitAfter: 2000
-  },
-  { text: "المهم… كل ثلاثة شهور، وأنتِ عسولتي أكثر من قبل.", waitAfter: 1000 },
-  {
-    text: "أحبك أحبك أحبك وأموت فيكي وأعشقك، وجودك أحلى شي فحياتي.",
-    waitAfter: 0
-  }
-];
+/* ---------- QUIZ ---------- */
 
-const closingStory = [
-  { text: "from day one…", waitAfter: 2000 },
-  {
-    text: "I fell in love with the novelty of us,\nthe thrill in every outing,\nlike the world kept reshaping itself just to fit us better.",
-    waitAfter: 3000
-  },
-  {
-    text: "the way our souls don’t just meet…\nthey recognize,\nthey lean into each other like they’ve been waiting.",
-    waitAfter: 3000
-  },
-  {
-    text: "and me\ngetting lost, again and again,\ndrowning in your eyes\nlike it’s the only place I was ever meant to be.",
-    waitAfter: 3000
-  },
-  {
-    text: "your sandwiches… your hot chocolate…\nsomehow tasting like how i’ve always wanted,\nlike love was always meant to be this simple.",
-    waitAfter: 3000
-  },
-  { text: "cake wednesdays with you,", waitAfter: 3000 },
-  { text: "you teaching me overwatch", waitAfter: 3000 },
-  {
-    text: "steak and fries, orange and mango,\nbut it was never about the food…\nit was always about you.",
-    waitAfter: 3000
-  },
-  {
-    text: "ramadan nights…\nunforgettable\nevery night somehow feeling just as special as the last.",
-    waitAfter: 3000
-  },
-  { text: "karata games,", waitAfter: 3000 },
-  {
-    text: "us under the rain…\njust us, soaked, but the world is ours.",
-    waitAfter: 3000
-  },
-  { text: "apartment hunting with you,", waitAfter: 3000 },
-  { text: "discord nights,", waitAfter: 3000 },
-  {
-    text: "and through all of it…\nI’m not just holding onto what we’ve had,\nI’m looking forward to everything",
-    waitAfter: 1000
-  },
-  { text: "with you…", waitAfter: 0 }
-];
+function renderOptions() {
+  optionsEl.innerHTML = "";
 
-window.addEventListener("load", () => {
-  loadGame();
-});
+  ingredients.forEach(item => {
+    const btn = document.createElement("button");
+    btn.className = "option";
+    btn.textContent = item;
 
-skipBtn.addEventListener("click", () => {
-  introScreen.classList.add("hidden");
-  gameScreen.classList.remove("hidden");
-  setTimeout(() => input.focus(), 300);
-});
+    btn.addEventListener("click", () => {
+      if (selectedIngredients.includes(item)) {
+        selectedIngredients = selectedIngredients.filter(x => x !== item);
+        btn.classList.remove("selected");
+      } else {
+        selectedIngredients.push(item);
+        btn.classList.add("selected");
+      }
+    });
 
-submitBtn.addEventListener("click", checkAnswer);
-
-input.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") checkAnswer();
-});
-
-clueBtn.addEventListener("click", useClue);
-
-popupBtn.addEventListener("click", () => {
-  popup.classList.add("hidden");
-  input.focus();
-});
-
-nextBtn.addEventListener("click", () => {
-  splitScreen.classList.add("hidden");
-  storyScreen.classList.remove("hidden");
-  document.body.classList.add("story-mode");
-  playStory(mainStory, showYoruButton);
-});
-
-function loadGame() {
-  const game = games[stage];
-
-  tries = 3;
-  infinite = false;
-  clueUsed = false;
-
-  questionEl.textContent = game.question;
-  messageEl.textContent = "";
-  input.value = "";
-  clueBtn.textContent = "Take a clue";
-
-  updateTries();
-
-  if (game.pattern) {
-    patternEl.textContent = game.pattern;
-    patternEl.classList.remove("hidden");
-  } else {
-    patternEl.classList.add("hidden");
-  }
-}
-
-function checkAnswer() {
-  const value = normalize(input.value);
-  const correct = normalize(games[stage].answer);
-
-  if (value === correct) {
-    playSuccessSound();
-
-    if (stage === 1) {
-      stage = 2;
-      loadGame();
-      messageEl.textContent = "passed. next one.";
-      input.focus();
-      return;
-    }
-
-    if (stage === 2) {
-      gameScreen.classList.add("hidden");
-      document.body.classList.add("video-on");
-
-      setTimeout(() => {
-        splitScreen.classList.remove("hidden");
-      }, 900);
-
-      return;
-    }
-
-    if (stage === 3) {
-      gameScreen.classList.add("hidden");
-      storyScreen.classList.remove("hidden");
-      document.body.classList.add("story-mode");
-      playStory(closingStory);
-      return;
-    }
-  }
-
-  wrongAnswer();
-}
-
-function showYoruButton() {
-  const btn = document.createElement("button");
-  btn.className = "next-btn";
-  btn.textContent = "next";
-
-  btn.addEventListener("click", () => {
-    storyScreen.classList.add("hidden");
-    storyInner.innerHTML = "";
-    stage = 3;
-    loadGame();
-    gameScreen.classList.remove("hidden");
-    document.body.classList.remove("story-mode");
-    document.body.classList.add("video-on");
-
-    setTimeout(() => input.focus(), 300);
+    optionsEl.appendChild(btn);
   });
-
-  storyInner.appendChild(btn);
-  scrollStoryToBottom();
 }
 
-function wrongAnswer() {
-  playPeepSound();
-  triggerShake();
+submitQuiz.addEventListener("click", () => {
+  const sortedSelected = [...selectedIngredients].sort().join(",");
+  const sortedCorrect = [...correctIngredients].sort().join(",");
 
-  if (!infinite) {
-    tries--;
-    updateTries();
-    showSteaksAnimation();
+  if (sortedSelected === sortedCorrect) {
+    quizMessage.textContent = "perfect mix.";
+    setTimeout(() => {
+      quizScreen.classList.add("hidden");
+      levelScreen.classList.remove("hidden");
+      document.body.classList.add("game-mode");
+      updateLevelButtons();
+    }, 700);
+  } else {
+    quizMessage.textContent = "not quite... try the real نسبة وتناسب mix.";
   }
+});
 
-  messageEl.textContent = "peep";
+/* ---------- LEVEL SELECT ---------- */
 
-  if (tries <= 0 && !infinite) {
-    infinite = true;
-    updateTries();
-    showGiftPopup();
+levelButtons.forEach(btn => {
+  btn.addEventListener("click", () => {
+    const level = Number(btn.dataset.level);
+
+    if (level > unlockedLevel) {
+      levelMessage.textContent = "locked for now.";
+      return;
+    }
+
+    startLevel(level);
+  });
+});
+
+backBtn.addEventListener("click", () => {
+  gameRunning = false;
+  gameScreen.classList.add("hidden");
+  levelScreen.classList.remove("hidden");
+  updateLevelButtons();
+});
+
+continueBtn.addEventListener("click", () => {
+  popup.classList.add("hidden");
+
+  if (currentLevel < 3) {
+    unlockedLevel = Math.max(unlockedLevel, currentLevel + 1);
+    gameScreen.classList.add("hidden");
+    levelScreen.classList.remove("hidden");
+    updateLevelButtons();
+  } else {
+    gameScreen.classList.add("hidden");
+    teaserScreen.classList.remove("hidden");
   }
+});
 
-  input.select();
+function updateLevelButtons() {
+  levelButtons.forEach(btn => {
+    const level = Number(btn.dataset.level);
+    btn.classList.toggle("locked", level > unlockedLevel);
+  });
 }
 
-function useClue() {
-  if (!clueUsed && !infinite) {
-    tries--;
-    updateTries();
-    showSteaksAnimation();
-  }
+/* ---------- GAME ---------- */
 
-  clueUsed = true;
-  messageEl.textContent = games[stage].clue;
-  clueBtn.textContent = stage === 1 ? "maybe ask her yourself" : "clue used";
+function startLevel(level) {
+  currentLevel = level;
+  levelComplete = false;
+  gameRunning = true;
 
-  if (tries <= 0 && !infinite) {
-    infinite = true;
-    updateTries();
-    showGiftPopup();
-  }
+  const info = levels[level];
+  gameTitle.textContent = info.title;
+  gameHint.textContent = info.hint;
 
-  input.focus();
+  levelScreen.classList.add("hidden");
+  gameScreen.classList.remove("hidden");
+
+  setupCars(level);
+  requestAnimationFrame(gameLoop);
 }
 
-function showGiftPopup() {
+function setupCars(level) {
+  if (level === 1) {
+    cars = [
+      makeCar(90, 350, "#8e8e8e", "JIMNY", "girl"),
+      makeCar(90, 420, "#f7f7f7", "RAV4", "boy")
+    ];
+  }
+
+  if (level === 2) {
+    cars = [
+      makeCar(70, 390, "#8e8e8e", "JIMNY", "girl"),
+      makeCar(70, 450, "#f7f7f7", "RAV4", "boy")
+    ];
+  }
+
+  if (level === 3) {
+    cars = [
+      makeCar(80, 300, "#f7f7f7", "BOAT", "girl"),
+      makeCar(80, 370, "#e8e8e8", "BOAT", "boy")
+    ];
+  }
+}
+
+function makeCar(x, y, color, label, driver) {
+  return {
+    x,
+    y,
+    w: 62,
+    h: 34,
+    color,
+    label,
+    driver,
+    done: false
+  };
+}
+
+function gameLoop() {
+  if (!gameRunning) return;
+
+  update();
+  draw();
+
+  if (!levelComplete && cars.every(c => c.done)) {
+    levelComplete = true;
+    gameRunning = false;
+
+    setTimeout(() => {
+      showComplete();
+    }, 500);
+  }
+
+  requestAnimationFrame(gameLoop);
+}
+
+function update() {
+  const speed = 2.2;
+
+  cars.forEach((car, i) => {
+    if (car.done) return;
+
+    const isFirst = i === 0;
+
+    if (isFirst) {
+      if (keys["ArrowLeft"] || keys["a"]) car.x -= speed;
+      if (keys["ArrowRight"] || keys["d"]) car.x += speed;
+      if (keys["ArrowUp"] || keys["w"]) car.y -= speed;
+      if (keys["ArrowDown"] || keys["s"]) car.y += speed;
+    } else {
+      car.x += (cars[0].x - 70 - car.x) * 0.025;
+      car.y += (cars[0].y + 54 - car.y) * 0.025;
+    }
+
+    car.x = Math.max(20, Math.min(canvas.width - car.w - 20, car.x));
+    car.y = Math.max(80, Math.min(canvas.height - car.h - 20, car.y));
+
+    if (hitGoal(car)) {
+      car.done = true;
+    }
+  });
+}
+
+function hitGoal(car) {
+  if (currentLevel === 1) return car.x > 790 && car.y < 230;
+  if (currentLevel === 2) return car.x > 760 && car.y < 190;
+  if (currentLevel === 3) return car.x > 770 && car.y > 120 && car.y < 280;
+}
+
+/* ---------- DRAW ---------- */
+
+function draw() {
+  const setting = levels[currentLevel].setting;
+
+  if (setting === "beach") drawBeach();
+  if (setting === "mountain") drawMountain();
+  if (setting === "cruise") drawCruise();
+
+  cars.forEach(drawVehicle);
+
+  if (currentLevel === 2 && cars.every(c => c.done)) {
+    drawCampingScene();
+  }
+}
+
+function drawBeach() {
+  ctx.fillStyle = "#78d5e8";
+  ctx.fillRect(0, 0, 960, 260);
+
+  ctx.fillStyle = "#f3d28a";
+  ctx.fillRect(0, 260, 960, 280);
+
+  ctx.fillStyle = "#4ab6d6";
+  ctx.fillRect(0, 160, 960, 90);
+
+  drawPixelSun(820, 70);
+  drawFlag(830, 185, "FINISH");
+  drawRoad(0, 365, 960, 95, "#c9b17e");
+}
+
+function drawMountain() {
+  ctx.fillStyle = "#d8b48a";
+  ctx.fillRect(0, 0, 960, 540);
+
+  ctx.fillStyle = "#3d3d3d";
+  drawTriangle(0, 420, 210, 80, 420, 420);
+  drawTriangle(220, 420, 470, 70, 720, 420);
+  drawTriangle(520, 420, 760, 90, 960, 420);
+
+  ctx.fillStyle = "#6f5c4a";
+  ctx.fillRect(0, 420, 960, 120);
+
+  drawRoad(0, 400, 960, 80, "#8b7a67");
+  drawTower(790, 120);
+  drawFlag(810, 155, "TOWER");
+}
+
+function drawCruise() {
+  ctx.fillStyle = "#88d7e8";
+  ctx.fillRect(0, 0, 960, 540);
+
+  ctx.fillStyle = "#3bb5c8";
+  ctx.fillRect(0, 260, 960, 280);
+
+  ctx.fillStyle = "#373737";
+  drawTriangle(0, 260, 110, 90, 260, 260);
+  drawTriangle(650, 260, 780, 90, 960, 260);
+
+  drawPalace(650, 185);
+  drawFlag(800, 250, "PALACE");
+}
+
+function drawRoad(x, y, w, h, color) {
+  ctx.fillStyle = color;
+  ctx.fillRect(x, y, w, h);
+
+  ctx.fillStyle = "rgba(255,255,255,0.6)";
+  for (let i = 0; i < w; i += 80) {
+    ctx.fillRect(i + 20, y + h / 2, 40, 5);
+  }
+}
+
+function drawVehicle(car) {
+  if (currentLevel === 3) {
+    drawBoat(car);
+    return;
+  }
+
+  ctx.fillStyle = car.color;
+  ctx.fillRect(car.x, car.y, car.w, car.h);
+
+  ctx.fillStyle = "#111";
+  ctx.fillRect(car.x + 10, car.y + 7, 14, 10);
+  ctx.fillRect(car.x + 34, car.y + 7, 14, 10);
+
+  ctx.fillStyle = "#111";
+  ctx.fillRect(car.x + 8, car.y + 29, 12, 8);
+  ctx.fillRect(car.x + 42, car.y + 29, 12, 8);
+
+  ctx.fillStyle = car.driver === "girl" ? "#ff9ccf" : "#8cc7ff";
+  ctx.fillRect(car.x + 26, car.y - 10, 12, 12);
+
+  ctx.fillStyle = "#111";
+  ctx.font = "8px monospace";
+  ctx.fillText(car.label, car.x + 8, car.y + 25);
+}
+
+function drawBoat(car) {
+  ctx.fillStyle = "#fff";
+  ctx.fillRect(car.x, car.y, 80, 28);
+
+  ctx.fillStyle = "#d9f7ff";
+  ctx.fillRect(car.x + 18, car.y - 16, 42, 18);
+
+  ctx.fillStyle = car.driver === "girl" ? "#ff9ccf" : "#8cc7ff";
+  ctx.fillRect(car.x + 36, car.y - 28, 12, 12);
+
+  ctx.fillStyle = "#0f6b8a";
+  ctx.fillRect(car.x - 8, car.y + 26, 96, 5);
+}
+
+function drawPixelSun(x, y) {
+  ctx.fillStyle = "#ffd15c";
+  ctx.fillRect(x, y, 42, 42);
+}
+
+function drawFlag(x, y, text) {
+  ctx.fillStyle = "#fff0c9";
+  ctx.fillRect(x, y, 8, 70);
+
+  ctx.fillStyle = "#7b1730";
+  ctx.fillRect(x + 8, y, 62, 28);
+
+  ctx.fillStyle = "#fff";
+  ctx.font = "10px monospace";
+  ctx.fillText(text, x + 13, y + 18);
+}
+
+function drawTower(x, y) {
+  ctx.strokeStyle = "#222";
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.moveTo(x, y + 210);
+  ctx.lineTo(x + 45, y);
+  ctx.lineTo(x + 90, y + 210);
+  ctx.moveTo(x + 20, y + 90);
+  ctx.lineTo(x + 70, y + 90);
+  ctx.moveTo(x + 10, y + 150);
+  ctx.lineTo(x + 80, y + 150);
+  ctx.stroke();
+}
+
+function drawCampingScene() {
+  ctx.fillStyle = "#fff0c9";
+  ctx.fillRect(650, 330, 46, 10);
+  ctx.fillRect(710, 330, 46, 10);
+
+  ctx.fillStyle = "#ff9ccf";
+  ctx.fillRect(660, 300, 16, 28);
+
+  ctx.fillStyle = "#8cc7ff";
+  ctx.fillRect(720, 300, 16, 28);
+}
+
+function drawPalace(x, y) {
+  ctx.fillStyle = "#fff";
+  ctx.fillRect(x, y, 220, 80);
+
+  ctx.fillStyle = "#3d3d3d";
+  ctx.fillRect(x + 80, y + 20, 60, 60);
+
+  ctx.fillStyle = "#d8b48a";
+  ctx.fillRect(x + 95, y + 5, 30, 15);
+
+  ctx.fillStyle = "#fff";
+  for (let i = 0; i < 5; i++) {
+    ctx.fillRect(x + 15 + i * 38, y + 30, 18, 50);
+  }
+}
+
+function drawTriangle(x1, y1, x2, y2, x3, y3) {
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.lineTo(x3, y3);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function showComplete() {
+  completeTitle.textContent = `LEVEL ${currentLevel} CLEARED`;
+
+  if (currentLevel === 1) {
+    completeText.textContent = "Beach drive complete. The mountain is waiting.";
+  } else if (currentLevel === 2) {
+    completeText.textContent = "They made it up the mountain and chilled by the tower.";
+  } else {
+    completeText.textContent = "Cruise complete. Alam Palace looks perfect from here.";
+  }
+
   popup.classList.remove("hidden");
 }
 
-function showSteaksAnimation() {
-  document.body.classList.remove("try-lost");
-  stakesText.classList.remove("show");
+/* ---------- INPUT ---------- */
 
-  void document.body.offsetWidth;
+window.addEventListener("keydown", e => {
+  keys[e.key] = true;
+});
 
-  document.body.classList.add("try-lost");
-  stakesText.classList.add("show");
+window.addEventListener("keyup", e => {
+  keys[e.key] = false;
+});
 
-  setTimeout(() => {
-    document.body.classList.remove("try-lost");
-    stakesText.classList.remove("show");
-  }, 1300);
-}
+document.querySelectorAll(".mobile-controls button").forEach(btn => {
+  const key = btn.dataset.key;
 
-function updateTries() {
-  triesEl.textContent = infinite ? "∞ tries" : `${tries} tries`;
-}
-
-function normalize(text) {
-  return text.trim().toLowerCase();
-}
-
-function triggerShake() {
-  input.classList.remove("shake");
-  void input.offsetWidth;
-  input.classList.add("shake");
-}
-
-function wait(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-async function playStory(storyArray, onComplete) {
-  if (storyPlaying) return;
-  storyPlaying = true;
-
-  storyInner.innerHTML = "";
-
-  for (const item of storyArray) {
-    const line = document.createElement("p");
-    line.className = "story-line";
-
-    const arabic = isMostlyArabic(item.text);
-    line.dir = arabic ? "rtl" : "ltr";
-    line.style.textAlign = arabic ? "right" : "left";
-
-    storyInner.appendChild(line);
-    scrollStoryToBottom();
-
-    await typeText(line, item.text, 32);
-
-    line.classList.add("done");
-    scrollStoryToBottom();
-
-    await wait(item.waitAfter);
-  }
-
-  storyPlaying = false;
-
-  if (typeof onComplete === "function") {
-    onComplete();
-  }
-}
-
-async function typeText(element, text, speed = 32) {
-  element.textContent = "";
-
-  for (let i = 0; i < text.length; i++) {
-    element.textContent += text[i];
-
-    if (i % 12 === 0) scrollStoryToBottom();
-
-    const char = text[i];
-    let delay = speed;
-
-    if (char === "…") delay = 260;
-    if (char === "؟" || char === "?") delay = 220;
-    if (char === "،" || char === ",") delay = 150;
-    if (char === "." || char === "!" || char === "—") delay = 180;
-    if (char === "\n") delay = 260;
-
-    await wait(delay);
-  }
-}
-
-function scrollStoryToBottom() {
-  storyScreen.scrollTo({
-    top: storyScreen.scrollHeight,
-    behavior: "smooth"
+  btn.addEventListener("touchstart", e => {
+    e.preventDefault();
+    keys[key] = true;
   });
-}
 
-function isMostlyArabic(text) {
-  const arabicChars = text.match(/[\u0600-\u06FF]/g) || [];
-  const englishChars = text.match(/[A-Za-z]/g) || [];
+  btn.addEventListener("touchend", e => {
+    e.preventDefault();
+    keys[key] = false;
+  });
 
-  return arabicChars.length > englishChars.length;
-}
+  btn.addEventListener("mousedown", () => keys[key] = true);
+  btn.addEventListener("mouseup", () => keys[key] = false);
+});
 
-function playPeepSound() {
-  playTone(880, 0.16, 0.07);
-}
-
-function playSuccessSound() {
-  playTone(620, 0.09, 0.05);
-  setTimeout(() => playTone(820, 0.12, 0.05), 90);
-}
-
-function playTone(freq, duration, volume) {
-  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-  if (!AudioContextClass) return;
-
-  const ctx = new AudioContextClass();
-  const oscillator = ctx.createOscillator();
-  const gainNode = ctx.createGain();
-
-  oscillator.type = "sine";
-  oscillator.frequency.setValueAtTime(freq, ctx.currentTime);
-
-  gainNode.gain.setValueAtTime(0.0001, ctx.currentTime);
-  gainNode.gain.exponentialRampToValueAtTime(volume, ctx.currentTime + 0.01);
-  gainNode.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
-
-  oscillator.connect(gainNode);
-  gainNode.connect(ctx.destination);
-
-  oscillator.start();
-  oscillator.stop(ctx.currentTime + duration + 0.02);
-
-  oscillator.onended = () => ctx.close();
-}
+renderOptions();
