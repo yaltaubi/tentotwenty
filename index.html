@@ -1,13 +1,12 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>One Quarter Closer to Forever</title>
+  <title>Level 2</title>
 
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>❤️</text></svg>">
-
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Cairo:wght@500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
 </head>
 
@@ -17,70 +16,92 @@
 
   <main class="app">
 
-    <!-- Intro Message -->
-    <section id="intro-screen" class="split-screen">
-      <div class="split-card">
-        <p>
-          this would look better and be easier on a bigger screen, am i right?<br><br>
-          check behind you… I think there’s something that could help.
-        </p>
+    <!-- INGREDIENT QUESTION -->
+    <section id="quiz-screen" class="screen active">
+      <div class="pixel-card">
+        <p class="level-label">LEVEL 2</p>
+        <h1>نسبة وتناسب</h1>
+        <p class="question">What are the ingredients of نسبة وتناسب?</p>
 
-        <button id="skip-btn" class="next-btn">skip</button>
+        <div id="options" class="options"></div>
+
+        <button id="submit-quiz" class="pixel-btn">SUBMIT</button>
+        <p id="quiz-message" class="message"></p>
       </div>
     </section>
 
-    <!-- Games -->
-    <section id="game-screen" class="game-screen hidden">
-      <div class="game-card">
-        <div id="tries" class="tries">3 tries</div>
+    <!-- LEVEL MENU -->
+    <section id="level-screen" class="screen hidden">
+      <div class="pixel-card wide">
+        <p class="level-label">CHOOSE YOUR STOP</p>
+        <h1>8-BIT DATE QUEST</h1>
 
-        <p id="question" class="question"></p>
-        <p id="pattern" class="pattern hidden"></p>
+        <div class="level-grid">
+          <button class="level-btn" data-level="1">
+            <span>01</span>
+            Beach Drive
+          </button>
 
-        <input
-          id="answer-input"
-          class="answer-input"
-          placeholder="type here"
-          autocomplete="off"
-          autocapitalize="none"
-          spellcheck="false"
-        />
+          <button class="level-btn locked" data-level="2">
+            <span>02</span>
+            Mountain Chill
+          </button>
 
-        <button id="submit-btn" class="main-btn">Enter</button>
-        <button id="clue-btn" class="clue-btn">Take a clue</button>
+          <button class="level-btn locked" data-level="3">
+            <span>03</span>
+            Alam Cruise
+          </button>
+        </div>
 
-        <p id="message" class="message"></p>
+        <p id="level-message" class="message">Clear each level to unlock the next.</p>
       </div>
     </section>
 
-    <div id="popup" class="popup hidden">
+    <!-- GAME -->
+    <section id="game-screen" class="screen hidden">
+      <div class="game-wrap">
+        <div class="game-top">
+          <button id="back-btn" class="small-btn">BACK</button>
+          <p id="game-title">LEVEL</p>
+          <p id="game-hint">Use arrow keys / WASD</p>
+        </div>
+
+        <canvas id="game-canvas" width="960" height="540"></canvas>
+
+        <div class="mobile-controls">
+          <button data-key="ArrowLeft">◀</button>
+          <button data-key="ArrowUp">▲</button>
+          <button data-key="ArrowDown">▼</button>
+          <button data-key="ArrowRight">▶</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- LEVEL COMPLETE POPUP -->
+    <div id="complete-popup" class="popup hidden">
       <div class="popup-card">
-        <p>gift from me 🎁</p>
-        <span>you get one more try… actually, unlimited now</span>
-        <button id="popup-btn">continue</button>
+        <h2 id="complete-title">LEVEL CLEARED</h2>
+        <p id="complete-text"></p>
+        <button id="continue-btn" class="pixel-btn">CONTINUE</button>
       </div>
     </div>
 
-<div id="stakes-text" class="stakes-text">
-  the steaks got higher…
-  <span>yes, steaks</span>
-</div>
-    <section id="split-screen" class="split-screen hidden">
-      <div class="split-card">
-        <p>
-          this is gonna be a personal message,<br><br>
-          thank you snoopy for the help<br>
-          you did your part and more,<br><br>
-          it's time for us to split.
-        </p>
+    <!-- FINAL TEASER -->
+    <section id="teaser-screen" class="screen hidden">
+      <div class="pixel-card">
+        <p class="level-label">COMING SOON</p>
+        <h1>LEVEL 4</h1>
+        <p class="question">Something is waiting on the track...</p>
 
-        <button id="next-btn" class="next-btn">next</button>
+        <div class="runner-teaser">
+          <div class="runner"></div>
+          <div class="track-line"></div>
+        </div>
+
+        <p class="message">not everything is a drive. some things are a run.</p>
       </div>
     </section>
 
-    <section id="story-screen" class="story-screen hidden">
-      <div id="story-inner" class="story-inner"></div>
-    </section>
   </main>
 
   <script src="script.js"></script>
