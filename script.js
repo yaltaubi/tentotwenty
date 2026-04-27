@@ -495,10 +495,10 @@ function shuffleClosedMountainCards() {
   });
 }
 
-/* ---------------- LEVEL 3: ALAM CRUISE ---------------- */
+/* ---------------- LEVEL 3: CRUISE GAME ---------------- */
 
 function setupCruise() {
-  gameTitle.textContent = "03 - Alam Cruise";
+  gameTitle.textContent = "03 - Cruise Game";
   cruise = {
     timer: 82,
     lives: 3,
@@ -506,15 +506,15 @@ function setupCruise() {
     boost: 100,
     target: null,
     message: "Guide the cute couple through the cruise and stay out of the coast guard light.",
-    player: { x: 130, y: 410, r: 22 },
-    guard: { x: 845, y: 320, dir: -1, speed: 76 },
+    player: { x: 128, y: 444, r: 18 },
+    guard: { x: 846, y: 396, dir: -1, speed: 76 },
     moments: [
-      { x: 235, y: 305, collected: false },
-      { x: 380, y: 456, collected: false },
-      { x: 535, y: 330, collected: false },
-      { x: 650, y: 470, collected: false },
-      { x: 770, y: 385, collected: false },
-      { x: 875, y: 285, collected: false }
+      { x: 230, y: 372, collected: false },
+      { x: 380, y: 468, collected: false },
+      { x: 530, y: 392, collected: false },
+      { x: 650, y: 486, collected: false },
+      { x: 766, y: 428, collected: false },
+      { x: 870, y: 366, collected: false }
     ],
     wake: []
   };
@@ -539,7 +539,7 @@ function updateCruise(dt) {
   setStatus(`MOMENTS ${collected}/6\n${heartText(cruise.lives)}`);
 
   if (collected >= cruise.moments.length) {
-    winLevel("The coast guard lost the trail. Alam cruise belongs to the two of you.");
+    winLevel("The coast guard lost the trail. Cruise game complete.");
   }
 
   if (cruise.timer <= 0) failAndRestart("The patrol boxed the cruise in. Trying the route again...");
@@ -581,7 +581,7 @@ function updateCruisePlayer(dt) {
   else cruise.boost = Math.min(100, cruise.boost + 18 * dt);
 
   player.x = clamp(player.x, 54, 906);
-  player.y = clamp(player.y, 282, 500);
+  player.y = clamp(player.y, 356, 505);
 }
 
 function updateCruiseGuard(dt) {
@@ -601,7 +601,7 @@ function updateCruiseGuard(dt) {
   }
 
   guard.x = clamp(guard.x, 515, 900);
-  guard.y = clamp(guard.y, 285, 470);
+  guard.y = clamp(guard.y, 348, 486);
 }
 
 function updateCruiseMoments() {
@@ -638,7 +638,7 @@ function updateCruiseAlert(dt) {
     }
     cruise.alert = 20;
     cruise.player.x = 130;
-    cruise.player.y = 410;
+    cruise.player.y = 444;
     cruise.target = null;
     setHint("Close call. Back to the marina line.");
   }
@@ -1066,35 +1066,35 @@ function drawCruise() {
 }
 
 function drawCruiseFallback() {
-  const sky = ctx.createLinearGradient(0, 0, 0, 260);
+  const sky = ctx.createLinearGradient(0, 0, 0, 300);
   sky.addColorStop(0, "#03051d");
   sky.addColorStop(0.6, "#12285a");
   sky.addColorStop(1, "#2f6d8d");
   ctx.fillStyle = sky;
-  ctx.fillRect(0, 0, W, 270);
+  ctx.fillRect(0, 0, W, 318);
 
   drawMoon(805, 62);
   ctx.fillStyle = "#11172f";
-  triangle(0, 270, 130, 90, 290, 270);
-  triangle(645, 270, 790, 92, 960, 270);
+  triangle(0, 318, 130, 90, 290, 318);
+  triangle(645, 318, 790, 92, 960, 318);
   drawPalace(645, 156);
 
-  const sea = ctx.createLinearGradient(0, 260, 0, H);
+  const sea = ctx.createLinearGradient(0, 318, 0, H);
   sea.addColorStop(0, "#0d5a78");
   sea.addColorStop(1, "#071a31");
   ctx.fillStyle = sea;
-  ctx.fillRect(0, 260, W, 280);
+  ctx.fillRect(0, 318, W, 222);
 }
 
 function drawCruiseWaterOverlay() {
-  ctx.fillStyle = "rgba(3, 12, 32, 0.2)";
-  ctx.fillRect(0, 260, W, 280);
+  ctx.fillStyle = "rgba(3, 12, 32, 0.28)";
+  ctx.fillRect(0, 318, W, 222);
   for (let i = 0; i < 7; i += 1) {
     ctx.strokeStyle = `rgba(126, 215, 230, ${0.18 - i * 0.015})`;
     ctx.lineWidth = 2;
     ctx.beginPath();
     for (let x = 0; x <= W; x += 8) {
-      const y = 290 + i * 36 + Math.sin(x * 0.024 + globalTime * 1.8 + i) * 7;
+      const y = 338 + i * 30 + Math.sin(x * 0.024 + globalTime * 1.8 + i) * 6;
       if (x === 0) ctx.moveTo(x, y);
       else ctx.lineTo(x, y);
     }
@@ -1152,33 +1152,33 @@ function drawCruiseWake() {
 function drawCoupleBoat() {
   const p = cruise.player;
   ctx.fillStyle = "#f6f1e8";
-  ctx.fillRect(p.x - 36, p.y - 10, 72, 28);
+  ctx.fillRect(p.x - 28, p.y - 8, 56, 22);
   ctx.fillStyle = COLORS.teal;
-  ctx.fillRect(p.x - 42, p.y + 14, 84, 8);
+  ctx.fillRect(p.x - 33, p.y + 12, 66, 6);
   ctx.fillStyle = COLORS.coral;
-  ctx.fillRect(p.x - 18, p.y - 28, 16, 24);
+  ctx.fillRect(p.x - 14, p.y - 24, 12, 20);
   ctx.fillStyle = COLORS.sky;
-  ctx.fillRect(p.x + 5, p.y - 28, 16, 24);
+  ctx.fillRect(p.x + 4, p.y - 24, 12, 20);
   ctx.fillStyle = COLORS.cream;
-  ctx.fillRect(p.x - 17, p.y - 39, 14, 14);
-  ctx.fillRect(p.x + 6, p.y - 39, 14, 14);
-  drawPixelHeart(p.x - 5, p.y - 52, COLORS.rose, 0.65);
+  ctx.fillRect(p.x - 14, p.y - 35, 11, 11);
+  ctx.fillRect(p.x + 5, p.y - 35, 11, 11);
+  drawPixelHeart(p.x - 7, p.y - 48, COLORS.rose, 0.48);
 }
 
 function drawCoastGuardBoat() {
   const g = cruise.guard;
   if (assets.coastGuard.ready) {
-    drawImageContain(assets.coastGuard, g.x - 42, g.y - 42, 84, 84);
+    drawImageContain(assets.coastGuard, g.x - 34, g.y - 34, 68, 68);
   } else {
     ctx.fillStyle = "#eff6fb";
-    ctx.fillRect(g.x - 42, g.y - 10, 84, 30);
+    ctx.fillRect(g.x - 34, g.y - 8, 68, 24);
     ctx.fillStyle = "#0f3654";
-    ctx.fillRect(g.x - 28, g.y - 34, 50, 28);
+    ctx.fillRect(g.x - 22, g.y - 29, 40, 23);
     ctx.fillStyle = COLORS.danger;
-    ctx.fillRect(g.x - 48, g.y + 18, 96, 7);
+    ctx.fillRect(g.x - 39, g.y + 15, 78, 6);
     ctx.fillStyle = "#0f3654";
-    ctx.font = "bold 11px Trebuchet MS, sans-serif";
-    centerText("COAST", g.x, g.y + 8);
+    ctx.font = "bold 9px Trebuchet MS, sans-serif";
+    centerText("COAST", g.x, g.y + 6);
   }
 }
 
