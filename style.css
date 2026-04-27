@@ -60,6 +60,12 @@ body {
   padding: 24px;
 }
 
+.option.correct {
+  background: #ff9c2b;
+  border-color: #ffd38a;
+  color: #111;
+}
+
 .hidden {
   display: none !important;
 }
