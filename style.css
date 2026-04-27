@@ -17,7 +17,6 @@ body {
   color: #fff;
 }
 
-/* Leopard main bg */
 .background-layer {
   position: fixed;
   inset: 0;
@@ -40,13 +39,8 @@ body {
 }
 
 @keyframes bgMove {
-  from {
-    transform: scale(1.08) translate(0, 0);
-  }
-
-  to {
-    transform: scale(1.12) translate(-12px, 8px);
-  }
+  from { transform: scale(1.08) translate(0, 0); }
+  to { transform: scale(1.12) translate(-12px, 8px); }
 }
 
 .app {
@@ -70,11 +64,11 @@ body {
 }
 
 .pixel-card {
-  width: min(92vw, 720px);
+  width: min(92vw, 760px);
   padding: 30px;
   text-align: center;
-  background: rgba(20, 12, 8, 0.82);
-  border: 4px solid rgba(255, 240, 220, 0.8);
+  background: rgba(20, 12, 8, 0.85);
+  border: 4px solid rgba(255, 240, 220, 0.85);
   box-shadow:
     0 0 0 6px rgba(60, 30, 20, 0.9),
     0 24px 80px rgba(0, 0, 0, 0.55);
@@ -82,19 +76,12 @@ body {
 }
 
 .pixel-card.wide {
-  width: min(94vw, 860px);
+  width: min(94vw, 880px);
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .level-label {
@@ -175,7 +162,6 @@ h1 {
   color: #ffe1a8;
 }
 
-/* Level menu */
 .level-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -197,7 +183,10 @@ h1 {
   font-size: 1.4rem;
 }
 
-/* Game */
+.level-btn.done {
+  background: #ff9c2b;
+}
+
 .game-wrap {
   width: min(96vw, 1060px);
 }
@@ -224,24 +213,6 @@ h1 {
   cursor: pointer;
 }
 
-.mobile-controls {
-  display: none;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-  margin-top: 14px;
-}
-
-.mobile-controls button {
-  padding: 14px;
-  font-size: 1rem;
-  font-family: inherit;
-  border: 0;
-  background: #fff0c9;
-  color: #211;
-  box-shadow: inset -3px -3px 0 rgba(0, 0, 0, 0.22);
-}
-
-/* Popup */
 .popup {
   position: fixed;
   inset: 0;
@@ -275,7 +246,6 @@ h1 {
   margin-bottom: 22px;
 }
 
-/* Teaser */
 .runner-teaser {
   height: 120px;
   position: relative;
@@ -312,13 +282,8 @@ h1 {
 }
 
 @keyframes runHint {
-  from {
-    transform: translateX(0);
-  }
-
-  to {
-    transform: translateX(20px);
-  }
+  from { transform: translateX(0); }
+  to { transform: translateX(20px); }
 }
 
 body.game-mode .background-layer {
@@ -341,9 +306,5 @@ body.game-mode .background-overlay {
 
   .game-top {
     font-size: 0.58rem;
-  }
-
-  .mobile-controls {
-    display: grid;
   }
 }
