@@ -7,14 +7,14 @@
 html,
 body {
   width: 100%;
-  min-height: 100%;
+  height: 100%;
 }
 
 body {
-  font-family: "Press Start 2P", Calibri, Arial, sans-serif;
   overflow: hidden;
-  background: #050505;
+  background: #080409;
   color: #fff;
+  font-family: "Press Start 2P", Calibri, Arial, sans-serif;
 }
 
 .background-layer {
@@ -24,7 +24,7 @@ body {
   background-size: cover;
   background-position: center;
   transform: scale(1.08);
-  animation: bgMove 24s ease-in-out infinite alternate;
+  animation: bgMove 22s ease-in-out infinite alternate;
   z-index: 0;
 }
 
@@ -32,15 +32,15 @@ body {
   position: fixed;
   inset: 0;
   background:
-    radial-gradient(circle at 25% 20%, rgba(255, 192, 120, 0.18), transparent 30%),
-    radial-gradient(circle at 80% 80%, rgba(90, 15, 31, 0.35), transparent 34%),
-    rgba(0, 0, 0, 0.62);
+    radial-gradient(circle at 25% 20%, rgba(255, 180, 90, 0.16), transparent 30%),
+    radial-gradient(circle at 75% 80%, rgba(120, 20, 45, 0.35), transparent 35%),
+    rgba(0, 0, 0, 0.68);
   z-index: 1;
 }
 
 @keyframes bgMove {
   from { transform: scale(1.08) translate(0, 0); }
-  to { transform: scale(1.12) translate(-12px, 8px); }
+  to { transform: scale(1.13) translate(-14px, 10px); }
 }
 
 .app {
@@ -56,7 +56,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
+  padding: 22px;
 }
 
 .hidden {
@@ -67,244 +67,217 @@ body {
   width: min(92vw, 760px);
   padding: 30px;
   text-align: center;
-  background: rgba(20, 12, 8, 0.85);
-  border: 4px solid rgba(255, 240, 220, 0.85);
+  background: rgba(21, 11, 16, 0.88);
+  border: 4px solid #ffe6b0;
   box-shadow:
-    0 0 0 6px rgba(60, 30, 20, 0.9),
-    0 24px 80px rgba(0, 0, 0, 0.55);
-  animation: fadeIn 0.6s ease;
+    0 0 0 6px #3a171b,
+    0 25px 80px rgba(0, 0, 0, 0.55);
 }
 
 .pixel-card.wide {
-  width: min(94vw, 880px);
+  width: min(94vw, 960px);
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.level-label {
-  font-size: 0.7rem;
-  color: #ffd38a;
+.label {
+  font-size: 0.68rem;
+  color: #ffcf69;
   margin-bottom: 18px;
 }
 
 h1 {
-  font-size: clamp(1rem, 3vw, 1.8rem);
-  margin-bottom: 20px;
-  color: #fff4d6;
+  font-size: clamp(1.05rem, 4vw, 2.2rem);
+  color: #ffd15c;
+  margin-bottom: 10px;
 }
 
-.question,
+.subtitle,
 .message {
   font-family: Calibri, Arial, sans-serif;
-}
-
-.question {
-  font-size: clamp(1.1rem, 2.2vw, 1.4rem);
-  line-height: 1.7;
-  margin-bottom: 22px;
-}
-
-.options {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-.option {
-  padding: 14px 10px;
-  background: rgba(255, 255, 255, 0.08);
-  color: white;
-  border: 3px solid rgba(255, 255, 255, 0.35);
-  cursor: pointer;
-  font-family: inherit;
-  font-size: 0.65rem;
-  transition: 0.15s ease;
-}
-
-.option.selected {
-  background: #7b1730;
-  border-color: #ffd38a;
-  transform: translateY(-2px);
-}
-
-.option.correct {
-  background: #ff9c2b;
-  border-color: #ffd38a;
-  color: #111;
-}
-
-.pixel-btn,
-.level-btn,
-.small-btn {
-  font-family: inherit;
-  border: 0;
-  cursor: pointer;
-  color: #211;
-  background: #fff0c9;
-  padding: 15px 18px;
-  box-shadow: inset -4px -4px 0 rgba(0, 0, 0, 0.22);
-}
-
-.pixel-btn:hover,
-.level-btn:hover,
-.small-btn:hover {
-  transform: translateY(-2px);
-}
-
-.message {
-  font-size: 1rem;
-  margin-top: 14px;
-  min-height: 26px;
-  color: #ffe1a8;
+  font-size: 1.15rem;
+  line-height: 1.5;
+  color: #fff4d6;
 }
 
 .level-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 18px;
-  margin-top: 24px;
+  margin: 30px 0 18px;
 }
 
 .level-btn {
-  min-height: 130px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  justify-content: center;
-  align-items: center;
-  background: #f5d08d;
+  min-height: 150px;
+  padding: 20px;
+  border: 4px solid #ffd15c;
+  background:
+    linear-gradient(to bottom, #4b1721, #1c0911);
+  color: #fff4d6;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: inset -5px -5px 0 rgba(0, 0, 0, 0.35);
 }
 
 .level-btn span {
-  font-size: 1.4rem;
+  display: block;
+  font-size: 1.6rem;
+  color: #ffd15c;
+  margin-bottom: 18px;
+}
+
+.level-btn:hover,
+.pixel-btn:hover,
+.small-btn:hover {
+  transform: translateY(-2px);
 }
 
 .level-btn.done {
-  background: #ff9c2b;
+  background: linear-gradient(to bottom, #ff9c2b, #7b1730);
 }
 
-.game-wrap {
-  width: min(96vw, 1060px);
+.game-shell {
+  width: min(96vw, 1080px);
 }
 
 .game-top {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 110px 1fr 110px;
+  gap: 12px;
   align-items: center;
   margin-bottom: 10px;
-  gap: 12px;
   color: #fff4d6;
-  font-size: 0.72rem;
+  font-size: 0.68rem;
+}
+
+#game-title {
+  color: #ffd15c;
+  margin-bottom: 8px;
+}
+
+#game-hint {
+  font-family: Calibri, Arial, sans-serif;
+  font-size: 1.05rem;
+}
+
+#status {
+  text-align: right;
+  color: #ff6b9a;
 }
 
 #game-canvas {
   width: 100%;
   aspect-ratio: 16 / 9;
   image-rendering: pixelated;
+  border: 5px solid #ffe6b0;
   background: #111;
-  border: 5px solid #fff0c9;
   box-shadow:
-    0 0 0 6px rgba(60, 30, 20, 0.9),
-    0 24px 80px rgba(0, 0, 0, 0.55);
+    0 0 0 6px #3a171b,
+    0 25px 80px rgba(0, 0, 0, 0.6);
   cursor: pointer;
+}
+
+.pixel-btn,
+.small-btn {
+  font-family: inherit;
+  border: none;
+  cursor: pointer;
+  background: #ffe6b0;
+  color: #1c0911;
+  padding: 14px 18px;
+  box-shadow: inset -4px -4px 0 rgba(0, 0, 0, 0.25);
 }
 
 .popup {
   position: fixed;
   inset: 0;
-  z-index: 10;
+  z-index: 9;
   display: flex;
-  justify-content: center;
   align-items: center;
-  background: rgba(0,0,0,0.58);
-  padding: 24px;
+  justify-content: center;
+  padding: 22px;
+  background: rgba(0, 0, 0, 0.62);
 }
 
 .popup-card {
   width: min(90vw, 520px);
-  text-align: center;
-  background: #2b0c18;
-  border: 4px solid #fff0c9;
   padding: 30px;
-  box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+  text-align: center;
+  background: #250812;
+  border: 4px solid #ffe6b0;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.6);
 }
 
 .popup-card h2 {
   font-size: 1rem;
+  color: #ffd15c;
   margin-bottom: 18px;
-  color: #ffd38a;
 }
 
 .popup-card p {
   font-family: Calibri, Arial, sans-serif;
-  font-size: 1.1rem;
-  line-height: 1.6;
-  margin-bottom: 22px;
+  font-size: 1.2rem;
+  line-height: 1.5;
+  margin-bottom: 24px;
 }
 
 .runner-teaser {
-  height: 120px;
-  position: relative;
-  margin: 26px auto;
+  height: 130px;
   width: min(420px, 80vw);
+  margin: 30px auto 0;
+  position: relative;
 }
 
 .runner {
   position: absolute;
-  left: 30px;
-  bottom: 30px;
+  left: 35px;
+  bottom: 34px;
   width: 28px;
   height: 42px;
-  background: #fff0c9;
+  background: #ffe6b0;
   box-shadow:
-    0 10px 0 #fff0c9,
-    18px 10px 0 #fff0c9,
-    8px 28px 0 #7b1730,
-    24px 28px 0 #7b1730;
-  animation: runHint 1s infinite steps(2);
+    0 10px 0 #ffe6b0,
+    18px 10px 0 #ffe6b0,
+    8px 28px 0 #ff9c2b,
+    24px 28px 0 #ff9c2b;
+  animation: runHint 0.7s infinite steps(2);
 }
 
-.track-line {
+.track {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 20px;
-  height: 4px;
+  bottom: 24px;
+  height: 5px;
   background: repeating-linear-gradient(
     to right,
-    #fff0c9 0 24px,
-    transparent 24px 40px
+    #ffe6b0 0 30px,
+    transparent 30px 45px
   );
 }
 
 @keyframes runHint {
   from { transform: translateX(0); }
-  to { transform: translateX(20px); }
+  to { transform: translateX(28px); }
 }
 
 body.game-mode .background-layer {
-  filter: blur(2px) brightness(0.55) saturate(0.8);
+  filter: blur(2px) brightness(0.5) saturate(0.8);
 }
 
 body.game-mode .background-overlay {
-  background: rgba(0,0,0,0.72);
+  background: rgba(0, 0, 0, 0.78);
 }
 
-@media (max-width: 700px) {
-  .options,
+@media (max-width: 760px) {
   .level-grid {
     grid-template-columns: 1fr;
   }
 
-  .pixel-card {
-    padding: 22px;
+  .game-top {
+    grid-template-columns: 1fr;
+    text-align: center;
   }
 
-  .game-top {
-    font-size: 0.58rem;
+  #status {
+    text-align: center;
   }
 }
