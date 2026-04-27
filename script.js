@@ -94,16 +94,26 @@ submitQuiz.addEventListener("click", () => {
   const sortedSelected = [...selectedIngredients].sort().join(",");
   const sortedCorrect = [...correctIngredients].sort().join(",");
 
+  const optionButtons = document.querySelectorAll(".option");
+
+  optionButtons.forEach(btn => {
+    if (correctIngredients.includes(btn.textContent)) {
+      btn.classList.add("correct");
+    }
+  });
+
   if (sortedSelected === sortedCorrect) {
     quizMessage.textContent = "perfect mix.";
+
     setTimeout(() => {
       quizScreen.classList.add("hidden");
       levelScreen.classList.remove("hidden");
       document.body.classList.add("game-mode");
       updateLevelButtons();
-    }, 700);
+    }, 900);
+
   } else {
-    quizMessage.textContent = "not quite... try the real نسبة وتناسب mix.";
+    quizMessage.textContent = "almost... something’s missing.";
   }
 });
 
