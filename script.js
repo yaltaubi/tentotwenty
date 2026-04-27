@@ -21,6 +21,7 @@ const keys = new Set();
 const completed = new Set();
 const assets = {
   juiceLogo: loadAsset("logo_juice_palace.png"),
+  egyptianWorker: loadAsset("egyptian.png"),
   mountainScene: loadAsset("scene_mountain.png"),
   cruiseScene: loadAsset("scene_cruise.png"),
   coastGuard: loadAsset("coast_guard.png")
@@ -203,29 +204,27 @@ function failAndRestart(message, delay = 950) {
   }, delay);
 }
 
-/* ---------------- LEVEL 1: JUICE + BEACH ---------------- */
+/* ---------------- LEVEL 1: THE ORDER ---------------- */
 
 function setupBeach() {
-  gameTitle.textContent = "01 - Juice + Beach";
+  gameTitle.textContent = "Game One";
   beach = {
     phase: "preview",
-    previewTimer: 3.6,
-    timer: 34,
+    previewTimer: 4.2,
+    timer: 32,
     lives: 3,
     selected: [],
-    recipe: ["Pomegranate", "Grape", "Passion", "Orange", "Berry"],
-    message: "Memorize the Juice Palace ratio before the recipe cards flip.",
+    recipe: ["Pomegranate", "Orange", "Mint", "Grape"],
+    workerLine: "you said Pomegranate?",
+    message: "The worker forgot the order again. Memorize it before he asks the same question forever.",
     ingredients: [
-      { name: "Grape", x: 96, y: 338 },
-      { name: "Passion", x: 226, y: 338 },
-      { name: "Pomegranate", x: 372, y: 338 },
-      { name: "Berry", x: 526, y: 338 },
-      { name: "Orange", x: 674, y: 338 },
-      { name: "Mango", x: 818, y: 338 },
-      { name: "Mint", x: 154, y: 448 },
-      { name: "Lemon", x: 306, y: 448 },
-      { name: "Peach", x: 458, y: 448 },
-      { name: "Vanilla", x: 612, y: 448 }
+      { name: "Lemon", x: 100, y: 346 },
+      { name: "Mint", x: 252, y: 448 },
+      { name: "Mango", x: 338, y: 340 },
+      { name: "Grape", x: 500, y: 448 },
+      { name: "Berry", x: 606, y: 340 },
+      { name: "Orange", x: 734, y: 448 },
+      { name: "Pomegranate", x: 832, y: 340 }
     ],
     spots: [
       { x: 690, y: 300, w: 118, h: 80, good: true, taken: false, label: "quiet shade" },
@@ -236,7 +235,7 @@ function setupBeach() {
     sparkles: []
   };
   setHint(beach.message);
-  setStatus("MEMO 4");
+  setStatus("MEMO 5");
   canvas.onclick = beachClick;
 }
 
@@ -245,7 +244,7 @@ function beachClick(event) {
   const p = point(event);
 
   if (beach.phase === "preview") {
-    setHint("Hold that order in your head. The timer starts in a moment.");
+    setHint("He is still asking about Pomegranate. Memorize the whole ticket.");
     return;
   }
 
@@ -257,17 +256,17 @@ function beachClick(event) {
     if (item.name === expected) {
       beach.selected.push(item.name);
       beach.sparkles.push({ x: item.x, y: item.y, age: 0, color: INGREDIENT_COLORS[item.name] });
-      setHint(`${item.name} locked. Keep the ratio clean.`);
+      setHint("Good. Keep reminding him; he still only remembers Pomegranate.");
       if (beach.selected.length >= beach.recipe.length) {
         beach.phase = "spot";
         beach.timer = 23;
-        beach.message = "Juice secured. Time the beach spot when the path is clear.";
+        beach.message = "Order saved. Now time the beach spot when the path is clear.";
         setHint(beach.message);
       }
     } else {
       beach.lives -= 1;
       beach.selected = [];
-      setHint(`${item.name} ruins the ratio. Start the sequence again.`);
+      setHint(`Nope. He heard ${item.name}, blinked twice, and forgot everything.`);
       shakeCanvas();
       if (beach.lives <= 0) failAndRestart("The blender gave up. Rebuilding the order...");
     }
@@ -315,15 +314,15 @@ function updateBeach(dt) {
     setStatus(`MEMO ${Math.max(0, Math.ceil(beach.previewTimer))}`);
     if (beach.previewTimer <= 0) {
       beach.phase = "juice";
-      beach.timer = 34;
-      setHint("Build the recipe from memory. A wrong pick resets the pour.");
+      beach.timer = 32;
+      setHint("Now remind him in the right order. No hints this time.");
     }
     return;
   }
 
   if (beach.phase === "juice") {
     beach.timer -= dt;
-    setStatus(`MIX ${beach.selected.length}/${beach.recipe.length}\n${heartText(beach.lives)}`);
+    setStatus(`ORDER ${beach.selected.length}/${beach.recipe.length}\n${heartText(beach.lives)}`);
     if (beach.timer <= 0) failAndRestart("The ice melted before the ratio was ready. Restarting...");
     return;
   }
@@ -344,7 +343,7 @@ function beachSpotBlocked() {
 /* ---------------- LEVEL 2: MOUNTAIN PICNIC ---------------- */
 
 function setupMountain() {
-  gameTitle.textContent = "02 - Mountain Picnic";
+  gameTitle.textContent = "Game Two";
   mountain = {
     phase: "picnic",
     timer: 38,
@@ -498,7 +497,7 @@ function shuffleClosedMountainCards() {
 /* ---------------- LEVEL 3: CRUISE GAME ---------------- */
 
 function setupCruise() {
-  gameTitle.textContent = "03 - Cruise Game";
+  gameTitle.textContent = "Game Three";
   cruise = {
     timer: 82,
     lives: 3,
@@ -810,17 +809,67 @@ function drawJuicePalace() {
   ctx.fillRect(196, 286, 58, 30);
   ctx.fillStyle = COLORS.gold;
   ctx.fillRect(246, 297, 5, 10);
+
+  drawJuiceWorker(390, 292);
+  drawWorkerBubble(462, 76, beach.workerLine || "you said Pomegranate?");
+}
+
+function drawJuiceWorker(x, y) {
+  ctx.save();
+  ctx.fillStyle = "rgba(0, 0, 0, 0.28)";
+  ctx.beginPath();
+  ctx.ellipse(x + 12, y + 26, 42, 12, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  if (assets.egyptianWorker.ready) {
+    drawImageContain(assets.egyptianWorker, x - 28, y - 86, 80, 112);
+    ctx.restore();
+    return;
+  }
+
+  ctx.fillStyle = "#2f5b49";
+  ctx.fillRect(x - 20, y - 42, 50, 58);
+  ctx.fillStyle = "#c98c5b";
+  ctx.fillRect(x - 15, y - 74, 40, 38);
+  ctx.fillStyle = "#1d1720";
+  ctx.fillRect(x - 18, y - 80, 46, 12);
+  ctx.fillStyle = "#f2e4cc";
+  ctx.fillRect(x - 24, y - 88, 56, 10);
+  ctx.fillStyle = "#2a130e";
+  ctx.fillRect(x - 4, y - 52, 18, 7);
+  ctx.fillStyle = "#111";
+  ctx.fillRect(x - 7, y - 61, 5, 5);
+  ctx.fillRect(x + 12, y - 61, 5, 5);
+  ctx.fillStyle = COLORS.cream;
+  ctx.fillRect(x - 26, y - 26, 62, 12);
+  ctx.fillStyle = COLORS.coral;
+  ctx.fillRect(x - 24, y - 24, 58, 4);
+  ctx.restore();
+}
+
+function drawWorkerBubble(x, y, text) {
+  const w = 254;
+  const h = 58;
+  ctx.fillStyle = "rgba(255, 241, 214, 0.94)";
+  ctx.fillRect(x, y, w, h);
+  ctx.fillStyle = "rgba(255, 241, 214, 0.94)";
+  triangle(x + 18, y + h, x + 40, y + h, x + 22, y + h + 20);
+  ctx.strokeStyle = COLORS.plum;
+  ctx.lineWidth = 2;
+  ctx.strokeRect(x, y, w, h);
+  ctx.fillStyle = COLORS.plum;
+  ctx.font = "bold 18px Trebuchet MS, sans-serif";
+  centerText(text, x + w / 2, y + 36);
 }
 
 function drawIngredients() {
   beach.ingredients.forEach((item) => {
     const index = beach.selected.indexOf(item.name);
     const selected = index >= 0;
-    const expected = beach.phase === "juice" && beach.recipe[beach.selected.length] === item.name;
     ctx.fillStyle = selected ? "rgba(124, 255, 155, 0.18)" : "rgba(8, 7, 18, 0.58)";
     ctx.fillRect(item.x - 43, item.y - 38, 86, 76);
-    ctx.strokeStyle = selected ? COLORS.green : expected ? COLORS.gold : "rgba(255, 241, 214, 0.3)";
-    ctx.lineWidth = expected ? 3 : 2;
+    ctx.strokeStyle = selected ? COLORS.green : "rgba(255, 241, 214, 0.3)";
+    ctx.lineWidth = selected ? 3 : 2;
     ctx.strokeRect(item.x - 43, item.y - 38, 86, 76);
 
     ctx.fillStyle = INGREDIENT_COLORS[item.name];
@@ -844,7 +893,7 @@ function drawRecipeStrip() {
   const x = 492;
   const y = 150;
   const showRecipe = beach.phase === "preview";
-  drawHudPanel(x, y, 382, 104, showRecipe ? "MEMORIZE THE RATIO" : "RECIPE MEMORY");
+  drawHudPanel(x, y, 320, 104, showRecipe ? "THE ACTUAL ORDER" : "REMIND HIM");
 
   beach.recipe.forEach((name, index) => {
     const bx = x + 24 + index * 68;

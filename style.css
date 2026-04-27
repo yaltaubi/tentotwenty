@@ -231,9 +231,9 @@ h1 {
 }
 
 .juice-art img {
-  object-fit: contain;
-  padding: 10px;
-  background: rgba(255, 241, 214, 0.08);
+  object-fit: cover;
+  padding: 0;
+  background: transparent;
 }
 
 .num {
