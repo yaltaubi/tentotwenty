@@ -17,8 +17,7 @@
 
   <main class="app">
 
-    <!-- INGREDIENT QUESTION -->
-    <section id="quiz-screen" class="screen active">
+    <section id="quiz-screen" class="screen">
       <div class="pixel-card">
         <p class="level-label">LEVEL 2</p>
         <h1>نسبة وتناسب</h1>
@@ -31,7 +30,6 @@
       </div>
     </section>
 
-    <!-- LEVEL MENU -->
     <section id="level-screen" class="screen hidden">
       <div class="pixel-card wide">
         <p class="level-label">CHOOSE YOUR SPOT</p>
@@ -39,12 +37,12 @@
         <div class="level-grid">
           <button class="level-btn" data-level="1">
             <span>01</span>
-            Beach Drive
+            Juice + Beach
           </button>
 
           <button class="level-btn" data-level="2">
             <span>02</span>
-            Mountain Chill
+            Mountain Hideout
           </button>
 
           <button class="level-btn" data-level="3">
@@ -57,27 +55,18 @@
       </div>
     </section>
 
-    <!-- GAME -->
     <section id="game-screen" class="screen hidden">
       <div class="game-wrap">
         <div class="game-top">
           <button id="back-btn" class="small-btn">BACK</button>
           <p id="game-title">LEVEL</p>
-          <p id="game-hint">Click around to play</p>
+          <p id="game-hint">Click to play</p>
         </div>
 
         <canvas id="game-canvas" width="960" height="540"></canvas>
-
-        <div class="mobile-controls">
-          <button data-key="ArrowLeft">◀</button>
-          <button data-key="ArrowUp">▲</button>
-          <button data-key="ArrowDown">▼</button>
-          <button data-key="ArrowRight">▶</button>
-        </div>
       </div>
     </section>
 
-    <!-- LEVEL COMPLETE POPUP -->
     <div id="complete-popup" class="popup hidden">
       <div class="popup-card">
         <h2 id="complete-title">LEVEL CLEARED</h2>
@@ -86,7 +75,6 @@
       </div>
     </div>
 
-    <!-- FINAL TEASER -->
     <section id="teaser-screen" class="screen hidden">
       <div class="pixel-card">
         <p class="level-label">COMING SOON</p>
