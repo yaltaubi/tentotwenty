@@ -34,7 +34,11 @@ const ingredients = [
   "Mint",
   "Vanilla",
   "Strawberry",
-  "Cherry"
+  "Cherry",
+  "Watermelon",
+  "Blueberry",
+  "Apple",
+  "Pineapple"
 ];
 
 const correctIngredients = ["Grape", "Passion", "Pomegranate", "Berry", "Orange"];
@@ -42,29 +46,25 @@ const correctIngredients = ["Grape", "Passion", "Pomegranate", "Berry", "Orange"
 let selectedIngredients = [];
 let currentLevel = 1;
 let completedLevels = new Set();
-let keys = {};
-let levelComplete = false;
 let animationFrameId = null;
 
-let cars = [];
-let level2Step = 0;
-let level3Step = 0;
-let level3Wave = 0;
+let levelComplete = false;
+let lastTime = 0;
 
 const levels = {
   1: {
-    title: "LEVEL 1: BEACH DRIVE",
-    hint: "Click the glowing spots in order.",
+    title: "LEVEL 1: JUICE + BEACH",
+    hint: "Start at Juice Palace.",
     setting: "beach"
   },
   2: {
-    title: "LEVEL 2: MOUNTAIN CHILL",
-    hint: "Build the mountain scene by clicking the right moments.",
+    title: "LEVEL 2: MOUNTAIN HIDEOUT",
+    hint: "Avoid the coast guard. Fill the bars.",
     setting: "mountain"
   },
   3: {
     title: "LEVEL 3: ALAM CRUISE",
-    hint: "Time the cruise moments correctly.",
+    hint: "Click the moments in order.",
     setting: "cruise"
   }
 };
@@ -97,9 +97,7 @@ submitQuiz.addEventListener("click", () => {
   const sortedSelected = [...selectedIngredients].sort().join(",");
   const sortedCorrect = [...correctIngredients].sort().join(",");
 
-  const optionButtons = document.querySelectorAll(".option");
-
-  optionButtons.forEach(btn => {
+  document.querySelectorAll(".option").forEach(btn => {
     if (correctIngredients.includes(btn.textContent)) {
       btn.classList.add("correct");
     }
@@ -123,8 +121,7 @@ submitQuiz.addEventListener("click", () => {
 
 levelButtons.forEach(btn => {
   btn.addEventListener("click", () => {
-    const level = Number(btn.dataset.level);
-    startLevel(level);
+    startLevel(Number(btn.dataset.level));
   });
 });
 
@@ -162,7 +159,51 @@ function updateLevelButtons() {
       : `${completedLevels.size}/3 spots cleared.`;
 }
 
-/* ---------- START LEVEL ---------- */
+/* ---------- LEVEL 1 BEACH ---------- */
+
+let beachPhase = "juice";
+let beachTimer = 18;
+let beachSpotTaken = false;
+let juiceItems = [
+  { name: "Grape", x: 140, y: 350, chosen: false },
+  { name: "Passion", x: 260, y: 350, chosen: false },
+  { name: "Orange", x: 380, y: 350, chosen: false }
+];
+
+let beachSpots = [
+  { x: 700, y: 310, w: 95, h: 70, taken: false, good: true },
+  { x: 610, y: 360, w: 90, h: 65, taken: false, good: false },
+  { x: 800, y: 370, w: 90, h: 65, taken: false, good: false }
+];
+
+/* ---------- LEVEL 2 MOUNTAIN ---------- */
+
+let mountain = {
+  lives: 3,
+  photos: 0,
+  smoke: 0,
+  kiss: 0,
+  fries: false,
+  steak: false,
+  guardX: 120,
+  guardDir: 1,
+  spottedCooldown: 0,
+  message: "Click the food truck first."
+};
+
+/* ---------- LEVEL 3 CRUISE ---------- */
+
+let cruiseStep = 0;
+let cruiseWave = 0;
+
+const cruiseSteps = [
+  { hint: "Click the private boat.", x: 100, y: 330, w: 135, h: 80 },
+  { hint: "Catch the calm wave.", x: 390, y: 320, w: 180, h: 70 },
+  { hint: "Click Alam Palace.", x: 650, y: 170, w: 235, h: 120 },
+  { hint: "Take the quiet moment.", x: 720, y: 300, w: 140, h: 100 }
+];
+
+/* ---------- START GAME ---------- */
 
 function startLevel(level) {
   currentLevel = level;
@@ -177,9 +218,9 @@ function startLevel(level) {
 
   stopGameLoop();
 
-  if (level === 1) setupLevel1();
-  if (level === 2) setupLevel2();
-  if (level === 3) setupLevel3();
+  if (level === 1) setupBeach();
+  if (level === 2) setupMountain();
+  if (level === 3) setupCruise();
 
   startGameLoop();
 }
@@ -192,199 +233,204 @@ function stopGameLoop() {
 }
 
 function startGameLoop() {
-  function loop() {
+  lastTime = performance.now();
+
+  function loop(time) {
+    const delta = Math.min((time - lastTime) / 1000, 0.05);
+    lastTime = time;
+
+    update(delta);
     draw();
+
     animationFrameId = requestAnimationFrame(loop);
   }
 
-  loop();
+  loop(lastTime);
 }
 
-/* ---------- LEVEL 1: BEACH CLICK GAME ---------- */
+/* ---------- SETUPS ---------- */
 
-let level1Step = 0;
+function setupBeach() {
+  beachPhase = "juice";
+  beachTimer = 18;
+  beachSpotTaken = false;
 
-const level1Steps = [
-  {
-    hint: "Click the Jimny.",
-    x: 115,
-    y: 350,
-    w: 95,
-    h: 55
-  },
-  {
-    hint: "Click the RAV4.",
-    x: 115,
-    y: 425,
-    w: 105,
-    h: 55
-  },
-  {
-    hint: "Click the beach flag.",
-    x: 805,
-    y: 170,
-    w: 110,
-    h: 90
-  },
-  {
-    hint: "Click the picnic spot.",
-    x: 720,
-    y: 330,
-    w: 160,
-    h: 90
+  juiceItems.forEach(i => i.chosen = false);
+  beachSpots.forEach(i => i.taken = false);
+
+  gameHint.textContent = "At Juice Palace: pick the 3 visible juice ingredients.";
+  canvas.onclick = handleBeachClick;
+}
+
+function setupMountain() {
+  mountain = {
+    lives: 3,
+    photos: 0,
+    smoke: 0,
+    kiss: 0,
+    fries: false,
+    steak: false,
+    guardX: 120,
+    guardDir: 1,
+    spottedCooldown: 0,
+    message: "Click the food truck first."
+  };
+
+  gameHint.textContent = mountain.message;
+  canvas.onclick = handleMountainClick;
+}
+
+function setupCruise() {
+  cruiseStep = 0;
+  cruiseWave = 0;
+  gameHint.textContent = cruiseSteps[0].hint;
+  canvas.onclick = handleCruiseClick;
+}
+
+/* ---------- UPDATES ---------- */
+
+function update(delta) {
+  if (levelComplete) return;
+
+  if (currentLevel === 1) updateBeach(delta);
+  if (currentLevel === 2) updateMountain(delta);
+}
+
+function updateBeach(delta) {
+  if (beachPhase !== "spot") return;
+
+  beachTimer -= delta;
+
+  if (beachTimer <= 0) {
+    beachSpotTaken = true;
+    gameHint.textContent = "Someone took the best spot. Try again.";
+    setTimeout(setupBeach, 1000);
   }
-];
-
-function setupLevel1() {
-  level1Step = 0;
-
-  cars = [
-    makeCar(110, 360, "#8e8e8e", "JIMNY", "girl"),
-    makeCar(110, 435, "#f7f7f7", "RAV4", "boy")
-  ];
-
-  gameHint.textContent = level1Steps[level1Step].hint;
-  canvas.onclick = handleLevel1Click;
 }
 
-function handleLevel1Click(e) {
-  const point = getCanvasPoint(e);
-  const target = level1Steps[level1Step];
+function updateMountain(delta) {
+  mountain.guardX += mountain.guardDir * 70 * delta;
 
-  if (isInside(point, target)) {
-    level1Step++;
+  if (mountain.guardX > 820) mountain.guardDir = -1;
+  if (mountain.guardX < 100) mountain.guardDir = 1;
 
-    if (level1Step >= level1Steps.length) {
+  if (mountain.spottedCooldown > 0) {
+    mountain.spottedCooldown -= delta;
+  }
+
+  const inDanger =
+    mountain.guardX > 560 &&
+    mountain.guardX < 780 &&
+    mountain.spottedCooldown <= 0;
+
+  const doingRisky = mountain.smoke > 0 || mountain.kiss > 0;
+
+  if (inDanger && doingRisky) {
+    mountain.lives--;
+    mountain.spottedCooldown = 2;
+    mountain.message = "Coast guard saw you. Act normal.";
+    gameHint.textContent = mountain.message;
+
+    if (mountain.lives <= 0) {
+      mountain.message = "You got caught. Restarting mountain...";
+      gameHint.textContent = mountain.message;
+      setTimeout(setupMountain, 1100);
+    }
+  }
+
+  if (
+    mountain.fries &&
+    mountain.steak &&
+    mountain.photos >= 4 &&
+    mountain.smoke >= 100 &&
+    mountain.kiss >= 100
+  ) {
+    showComplete();
+  }
+}
+
+/* ---------- CLICKS ---------- */
+
+function handleBeachClick(e) {
+  const p = getCanvasPoint(e);
+
+  if (beachPhase === "juice") {
+    juiceItems.forEach(item => {
+      if (distance(p.x, p.y, item.x, item.y) < 45) {
+        item.chosen = true;
+      }
+    });
+
+    if (juiceItems.every(i => i.chosen)) {
+      beachPhase = "spot";
+      beachTimer = 18;
+      gameHint.textContent = "Find the best beach spot before someone takes it.";
+    }
+
+    return;
+  }
+
+  if (beachPhase === "spot") {
+    const clicked = beachSpots.find(s => isInside(p, s));
+
+    if (!clicked) {
+      gameHint.textContent = "Not a beach spot.";
+      return;
+    }
+
+    if (clicked.good) {
+      showComplete();
+    } else {
+      clicked.taken = true;
+      gameHint.textContent = "That spot is okay... but not the one.";
+    }
+  }
+}
+
+function handleMountainClick(e) {
+  const p = getCanvasPoint(e);
+
+  if (isInside(p, { x: 95, y: 300, w: 210, h: 130 })) {
+    mountain.fries = true;
+    mountain.steak = true;
+    mountain.message = "Fries and steak secured. Now take 4 digicam photos.";
+  }
+
+  if (isInside(p, { x: 355, y: 250, w: 120, h: 110 })) {
+    mountain.photos = Math.min(4, mountain.photos + 1);
+    mountain.message = `Photo ${mountain.photos}/4 captured.`;
+  }
+
+  if (isInside(p, { x: 570, y: 330, w: 130, h: 90 })) {
+    mountain.smoke = Math.min(100, mountain.smoke + 20);
+    mountain.message = "Smoking bar filling...";
+  }
+
+  if (isInside(p, { x: 720, y: 330, w: 130, h: 90 })) {
+    mountain.kiss = Math.min(100, mountain.kiss + 20);
+    mountain.message = "Kissing bar filling...";
+  }
+
+  gameHint.textContent = mountain.message;
+}
+
+function handleCruiseClick(e) {
+  const p = getCanvasPoint(e);
+  const target = cruiseSteps[cruiseStep];
+
+  if (isInside(p, target)) {
+    cruiseStep++;
+
+    if (cruiseStep >= cruiseSteps.length) {
       showComplete();
       return;
     }
 
-    gameHint.textContent = level1Steps[level1Step].hint;
+    gameHint.textContent = cruiseSteps[cruiseStep].hint;
   } else {
-    gameHint.textContent = "close... but not that spot.";
+    gameHint.textContent = "The tide says nope.";
     setTimeout(() => {
-      if (!levelComplete) gameHint.textContent = level1Steps[level1Step].hint;
-    }, 700);
-  }
-}
-
-/* ---------- LEVEL 2: MOUNTAIN CLICK GAME ---------- */
-
-const level2Steps = [
-  {
-    hint: "Find the mountain road.",
-    x: 0,
-    y: 390,
-    w: 960,
-    h: 110
-  },
-  {
-    hint: "Click the electricity tower.",
-    x: 750,
-    y: 95,
-    w: 150,
-    h: 260
-  },
-  {
-    hint: "Set the camping chairs.",
-    x: 615,
-    y: 315,
-    w: 190,
-    h: 80
-  },
-  {
-    hint: "Bring the two of you to chill.",
-    x: 620,
-    y: 270,
-    w: 180,
-    h: 100
-  }
-];
-
-function setupLevel2() {
-  level2Step = 0;
-  gameHint.textContent = level2Steps[level2Step].hint;
-  canvas.onclick = handleLevel2Click;
-}
-
-function handleLevel2Click(e) {
-  const point = getCanvasPoint(e);
-  const target = level2Steps[level2Step];
-
-  if (isInside(point, target)) {
-    level2Step++;
-
-    if (level2Step >= level2Steps.length) {
-      showComplete();
-      return;
-    }
-
-    gameHint.textContent = level2Steps[level2Step].hint;
-  } else {
-    gameHint.textContent = "not there yet...";
-    setTimeout(() => {
-      if (!levelComplete) gameHint.textContent = level2Steps[level2Step].hint;
-    }, 700);
-  }
-}
-
-/* ---------- LEVEL 3: CRUISE CLICK GAME ---------- */
-
-const level3Steps = [
-  {
-    hint: "Start the little boat.",
-    x: 80,
-    y: 310,
-    w: 140,
-    h: 90
-  },
-  {
-    hint: "Catch the calm wave.",
-    x: 390,
-    y: 320,
-    w: 180,
-    h: 70
-  },
-  {
-    hint: "Reach the palace view.",
-    x: 650,
-    y: 170,
-    w: 235,
-    h: 120
-  },
-  {
-    hint: "Take one quiet moment together.",
-    x: 720,
-    y: 300,
-    w: 140,
-    h: 100
-  }
-];
-
-function setupLevel3() {
-  level3Step = 0;
-  level3Wave = 0;
-  gameHint.textContent = level3Steps[level3Step].hint;
-  canvas.onclick = handleLevel3Click;
-}
-
-function handleLevel3Click(e) {
-  const point = getCanvasPoint(e);
-  const target = level3Steps[level3Step];
-
-  if (isInside(point, target)) {
-    level3Step++;
-
-    if (level3Step >= level3Steps.length) {
-      showComplete();
-      return;
-    }
-
-    gameHint.textContent = level3Steps[level3Step].hint;
-  } else {
-    gameHint.textContent = "the tide says nope.";
-    setTimeout(() => {
-      if (!levelComplete) gameHint.textContent = level3Steps[level3Step].hint;
+      if (!levelComplete) gameHint.textContent = cruiseSteps[cruiseStep].hint;
     }, 700);
   }
 }
@@ -392,71 +438,66 @@ function handleLevel3Click(e) {
 /* ---------- DRAW ---------- */
 
 function draw() {
-  const setting = levels[currentLevel].setting;
-
-  if (setting === "beach") drawBeach();
-  if (setting === "mountain") drawMountain();
-  if (setting === "cruise") drawCruise();
+  if (currentLevel === 1) drawBeach();
+  if (currentLevel === 2) drawMountain();
+  if (currentLevel === 3) drawCruise();
 }
 
 function drawBeach() {
-  ctx.fillStyle = "#78d5e8";
-  ctx.fillRect(0, 0, 960, 260);
+  ctx.fillStyle = "#8fdff0";
+  ctx.fillRect(0, 0, 960, 250);
 
-  ctx.fillStyle = "#4ab6d6";
-  ctx.fillRect(0, 160, 960, 90);
+  ctx.fillStyle = "#39b8d2";
+  ctx.fillRect(0, 155, 960, 100);
 
   ctx.fillStyle = "#f3d28a";
-  ctx.fillRect(0, 260, 960, 280);
+  ctx.fillRect(0, 250, 960, 290);
 
-  drawPixelSun(820, 70);
-  drawRoad(0, 365, 960, 95, "#c9b17e");
-  drawFlag(830, 185, "BEACH");
+  drawSun(820, 62);
+  drawCloud(110, 70);
+  drawCloud(240, 42);
 
-  cars.forEach(drawVehicle);
+  drawJuicePalace();
 
-  if (level1Step >= 1) {
-    drawHeart(210, 345);
+  juiceItems.forEach(item => {
+    drawFruit(item.x, item.y, item.name, item.chosen);
+  });
+
+  beachSpots.forEach(s => {
+    drawBeachSpot(s);
+  });
+
+  if (beachPhase === "spot") {
+    drawTimer(35, 35, beachTimer, 18);
   }
-
-  if (level1Step >= 2) {
-    drawHeart(230, 420);
-  }
-
-  if (level1Step >= 3) {
-    drawPicnic(745, 345);
-  }
-
-  drawTargetBox(level1Steps[Math.min(level1Step, level1Steps.length - 1)]);
 }
 
 function drawMountain() {
-  ctx.fillStyle = "#d8b48a";
+  ctx.fillStyle = "#d3b08b";
   ctx.fillRect(0, 0, 960, 540);
 
-  ctx.fillStyle = "#3d3d3d";
+  ctx.fillStyle = "#2f2f34";
   drawTriangle(0, 420, 210, 80, 420, 420);
-  drawTriangle(220, 420, 470, 70, 720, 420);
-  drawTriangle(520, 420, 760, 90, 960, 420);
+  drawTriangle(220, 420, 470, 65, 720, 420);
+  drawTriangle(520, 420, 760, 85, 960, 420);
 
-  ctx.fillStyle = "#6f5c4a";
+  ctx.fillStyle = "#66503f";
   ctx.fillRect(0, 420, 960, 120);
 
-  if (level2Step >= 0) drawRoad(0, 400, 960, 80, "#8b7a67");
-  if (level2Step >= 1) drawTower(790, 120);
-  if (level2Step >= 2) drawCampingScene();
-  if (level2Step >= 3) {
-    drawVehicle(makeCar(620, 355, "#8e8e8e", "JIMNY", "girl"));
-    drawVehicle(makeCar(710, 355, "#f7f7f7", "RAV4", "boy"));
-  }
+  drawRoad(0, 400, 960, 80, "#8b7a67");
+  drawTower(790, 100);
+  drawFoodTruck(95, 300);
+  drawDigicam(385, 280);
+  drawChillZone();
 
-  drawTargetBox(level2Steps[Math.min(level2Step, level2Steps.length - 1)]);
+  drawGuard();
+  drawBars();
 }
 
 function drawCruise() {
-  level3Wave += 0.04;
+  cruiseWave += 0.04;
 
-  ctx.fillStyle = "#88d7e8";
+  ctx.fillStyle = "#a8e4f0";
   ctx.fillRect(0, 0, 960, 540);
 
   ctx.fillStyle = "#3bb5c8";
@@ -469,26 +510,144 @@ function drawCruise() {
   drawPalace(650, 185);
   drawWavePattern();
 
-  if (level3Step >= 0) drawBoat({ x: 100, y: 340, driver: "girl" });
-  if (level3Step >= 1) drawBoat({ x: 400, y: 345 + Math.sin(level3Wave) * 8, driver: "boy" });
-  if (level3Step >= 2) drawBoat({ x: 720, y: 325, driver: "girl" });
-  if (level3Step >= 3) drawHeart(790, 290);
+  drawBoat(100, 345, "#fff");
+  if (cruiseStep >= 1) drawBoat(410, 350 + Math.sin(cruiseWave) * 8, "#fff");
+  if (cruiseStep >= 2) drawBoat(720, 330, "#fff");
+  if (cruiseStep >= 3) drawHeart(790, 295);
 
-  drawTargetBox(level3Steps[Math.min(level3Step, level3Steps.length - 1)]);
+  drawTargetBox(cruiseSteps[Math.min(cruiseStep, cruiseSteps.length - 1)]);
 }
 
-/* ---------- DRAW HELPERS ---------- */
+/* ---------- PIXEL DRAW HELPERS ---------- */
 
-function makeCar(x, y, color, label, driver) {
-  return {
-    x,
-    y,
-    w: 62,
-    h: 34,
-    color,
-    label,
-    driver
-  };
+function drawJuicePalace() {
+  ctx.fillStyle = "#7b1730";
+  ctx.fillRect(80, 195, 310, 115);
+
+  ctx.fillStyle = "#fff0c9";
+  ctx.fillRect(100, 220, 270, 50);
+
+  ctx.fillStyle = "#2b0c18";
+  ctx.font = "18px monospace";
+  ctx.fillText("JUICE PALACE", 125, 248);
+
+  ctx.font = "16px monospace";
+  ctx.fillText("قصر العصائر", 180, 292);
+
+  ctx.fillStyle = "#ff9c2b";
+  ctx.fillRect(80, 185, 310, 18);
+}
+
+function drawFruit(x, y, label, chosen) {
+  ctx.fillStyle = chosen ? "#7cff9b" : "#fff0c9";
+  ctx.fillRect(x - 28, y - 28, 56, 56);
+
+  ctx.fillStyle = "#111";
+  ctx.font = "9px monospace";
+  ctx.fillText(label.slice(0, 6), x - 24, y + 4);
+}
+
+function drawBeachSpot(s) {
+  ctx.fillStyle = s.good ? "rgba(255, 211, 138, 0.7)" : "rgba(255,255,255,0.25)";
+  ctx.fillRect(s.x, s.y, s.w, s.h);
+
+  ctx.strokeStyle = "#fff0c9";
+  ctx.lineWidth = 3;
+  ctx.strokeRect(s.x, s.y, s.w, s.h);
+}
+
+function drawFoodTruck(x, y) {
+  ctx.fillStyle = "#fff0c9";
+  ctx.fillRect(x, y, 210, 90);
+
+  ctx.fillStyle = "#7b1730";
+  ctx.fillRect(x + 15, y + 15, 120, 30);
+
+  ctx.fillStyle = "#111";
+  ctx.font = "12px monospace";
+  ctx.fillText("STEAK + FRIES", x + 22, y + 35);
+
+  ctx.fillStyle = "#111";
+  ctx.fillRect(x + 25, y + 80, 25, 25);
+  ctx.fillRect(x + 150, y + 80, 25, 25);
+}
+
+function drawDigicam(x, y) {
+  ctx.fillStyle = "#222";
+  ctx.fillRect(x, y, 95, 65);
+
+  ctx.fillStyle = "#9cd7ff";
+  ctx.fillRect(x + 55, y + 15, 26, 26);
+
+  ctx.fillStyle = "#fff";
+  ctx.font = "10px monospace";
+  ctx.fillText("DIGICAM", x + 10, y + 55);
+}
+
+function drawChillZone() {
+  ctx.fillStyle = "#fff0c9";
+  ctx.fillRect(585, 355, 110, 16);
+  ctx.fillRect(730, 355, 110, 16);
+
+  ctx.fillStyle = "#ff9ccf";
+  ctx.fillRect(615, 325, 18, 30);
+
+  ctx.fillStyle = "#8cc7ff";
+  ctx.fillRect(755, 325, 18, 30);
+
+  ctx.fillStyle = "rgba(255,255,255,0.2)";
+  ctx.strokeStyle = "#fff0c9";
+  ctx.lineWidth = 3;
+  ctx.strokeRect(570, 330, 130, 90);
+  ctx.strokeRect(720, 330, 130, 90);
+}
+
+function drawGuard() {
+  ctx.fillStyle = "#0b2638";
+  ctx.fillRect(mountain.guardX, 255, 34, 54);
+
+  ctx.fillStyle = "#fff";
+  ctx.fillRect(mountain.guardX + 8, 240, 18, 18);
+
+  ctx.strokeStyle = "rgba(255,255,160,0.35)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(mountain.guardX + 17, 270);
+  ctx.lineTo(mountain.guardX + 130 * mountain.guardDir, 330);
+  ctx.lineTo(mountain.guardX + 130 * mountain.guardDir, 220);
+  ctx.closePath();
+  ctx.stroke();
+
+  ctx.fillStyle = "#fff";
+  ctx.font = "10px monospace";
+  ctx.fillText("COAST GUARD", mountain.guardX - 20, 235);
+}
+
+function drawBars() {
+  drawMiniBar(30, 28, "LIVES", mountain.lives / 3, "#ff6b6b");
+  drawMiniBar(30, 60, "PHOTO", mountain.photos / 4, "#9cd7ff");
+  drawMiniBar(30, 92, "SMOKE", mountain.smoke / 100, "#b5b5b5");
+  drawMiniBar(30, 124, "KISS", mountain.kiss / 100, "#ff9ccf");
+
+  ctx.fillStyle = "#fff0c9";
+  ctx.font = "11px monospace";
+  ctx.fillText(`FRIES: ${mountain.fries ? "YES" : "NO"}`, 30, 170);
+  ctx.fillText(`STEAK: ${mountain.steak ? "YES" : "NO"}`, 30, 190);
+}
+
+function drawMiniBar(x, y, label, amount, color) {
+  ctx.fillStyle = "#111";
+  ctx.fillRect(x, y, 160, 16);
+
+  ctx.fillStyle = color;
+  ctx.fillRect(x, y, 160 * amount, 16);
+
+  ctx.strokeStyle = "#fff0c9";
+  ctx.strokeRect(x, y, 160, 16);
+
+  ctx.fillStyle = "#fff";
+  ctx.font = "10px monospace";
+  ctx.fillText(label, x + 170, y + 12);
 }
 
 function drawRoad(x, y, w, h, color) {
@@ -501,84 +660,18 @@ function drawRoad(x, y, w, h, color) {
   }
 }
 
-function drawVehicle(car) {
-  ctx.fillStyle = car.color;
-  ctx.fillRect(car.x, car.y, car.w, car.h);
-
-  ctx.fillStyle = "#111";
-  ctx.fillRect(car.x + 10, car.y + 7, 14, 10);
-  ctx.fillRect(car.x + 34, car.y + 7, 14, 10);
-
-  ctx.fillStyle = "#111";
-  ctx.fillRect(car.x + 8, car.y + 29, 12, 8);
-  ctx.fillRect(car.x + 42, car.y + 29, 12, 8);
-
-  ctx.fillStyle = car.driver === "girl" ? "#ff9ccf" : "#8cc7ff";
-  ctx.fillRect(car.x + 26, car.y - 10, 12, 12);
-
-  ctx.fillStyle = "#111";
-  ctx.font = "8px monospace";
-  ctx.fillText(car.label, car.x + 8, car.y + 25);
-}
-
-function drawBoat(car) {
-  ctx.fillStyle = "#fff";
-  ctx.fillRect(car.x, car.y, 90, 28);
-
-  ctx.fillStyle = "#d9f7ff";
-  ctx.fillRect(car.x + 22, car.y - 18, 46, 20);
-
-  ctx.fillStyle = car.driver === "girl" ? "#ff9ccf" : "#8cc7ff";
-  ctx.fillRect(car.x + 40, car.y - 32, 12, 12);
-
-  ctx.fillStyle = "#0f6b8a";
-  ctx.fillRect(car.x - 8, car.y + 26, 106, 5);
-}
-
-function drawPixelSun(x, y) {
-  ctx.fillStyle = "#ffd15c";
-  ctx.fillRect(x, y, 42, 42);
-}
-
-function drawFlag(x, y, text) {
-  ctx.fillStyle = "#fff0c9";
-  ctx.fillRect(x, y, 8, 70);
-
-  ctx.fillStyle = "#7b1730";
-  ctx.fillRect(x + 8, y, 70, 28);
-
-  ctx.fillStyle = "#fff";
-  ctx.font = "10px monospace";
-  ctx.fillText(text, x + 13, y + 18);
-}
-
 function drawTower(x, y) {
   ctx.strokeStyle = "#222";
   ctx.lineWidth = 5;
   ctx.beginPath();
-  ctx.moveTo(x, y + 210);
+  ctx.moveTo(x, y + 230);
   ctx.lineTo(x + 45, y);
-  ctx.lineTo(x + 90, y + 210);
+  ctx.lineTo(x + 90, y + 230);
   ctx.moveTo(x + 20, y + 90);
   ctx.lineTo(x + 70, y + 90);
-  ctx.moveTo(x + 10, y + 150);
-  ctx.lineTo(x + 80, y + 150);
+  ctx.moveTo(x + 10, y + 155);
+  ctx.lineTo(x + 80, y + 155);
   ctx.stroke();
-}
-
-function drawCampingScene() {
-  ctx.fillStyle = "#fff0c9";
-  ctx.fillRect(650, 330, 46, 10);
-  ctx.fillRect(710, 330, 46, 10);
-
-  ctx.fillStyle = "#ff9ccf";
-  ctx.fillRect(660, 300, 16, 28);
-
-  ctx.fillStyle = "#8cc7ff";
-  ctx.fillRect(720, 300, 16, 28);
-
-  ctx.fillStyle = "#ff9c2b";
-  ctx.fillRect(688, 350, 30, 16);
 }
 
 function drawPalace(x, y) {
@@ -597,13 +690,15 @@ function drawPalace(x, y) {
   }
 }
 
-function drawTriangle(x1, y1, x2, y2, x3, y3) {
-  ctx.beginPath();
-  ctx.moveTo(x1, y1);
-  ctx.lineTo(x2, y2);
-  ctx.lineTo(x3, y3);
-  ctx.closePath();
-  ctx.fill();
+function drawBoat(x, y, color) {
+  ctx.fillStyle = color;
+  ctx.fillRect(x, y, 90, 28);
+
+  ctx.fillStyle = "#d9f7ff";
+  ctx.fillRect(x + 22, y - 18, 46, 20);
+
+  ctx.fillStyle = "#0f6b8a";
+  ctx.fillRect(x - 8, y + 26, 106, 5);
 }
 
 function drawTargetBox(target) {
@@ -616,14 +711,31 @@ function drawTargetBox(target) {
   ctx.setLineDash([]);
 }
 
-function drawPicnic(x, y) {
-  ctx.fillStyle = "#7b1730";
-  ctx.fillRect(x, y, 100, 50);
+function drawTimer(x, y, value, max) {
+  ctx.fillStyle = "#111";
+  ctx.fillRect(x, y, 190, 22);
 
-  ctx.fillStyle = "#fff0c9";
-  ctx.fillRect(x + 12, y + 10, 18, 18);
-  ctx.fillRect(x + 40, y + 12, 16, 16);
-  ctx.fillRect(x + 68, y + 10, 18, 18);
+  ctx.fillStyle = "#ff9c2b";
+  ctx.fillRect(x, y, 190 * Math.max(0, value / max), 22);
+
+  ctx.strokeStyle = "#fff0c9";
+  ctx.strokeRect(x, y, 190, 22);
+
+  ctx.fillStyle = "#fff";
+  ctx.font = "12px monospace";
+  ctx.fillText(`TIME ${Math.ceil(value)}`, x + 50, y + 16);
+}
+
+function drawSun(x, y) {
+  ctx.fillStyle = "#ffd15c";
+  ctx.fillRect(x, y, 42, 42);
+}
+
+function drawCloud(x, y) {
+  ctx.fillStyle = "#fff";
+  ctx.fillRect(x, y, 50, 20);
+  ctx.fillRect(x + 18, y - 14, 38, 34);
+  ctx.fillRect(x + 48, y + 5, 38, 15);
 }
 
 function drawHeart(x, y) {
@@ -642,13 +754,22 @@ function drawWavePattern() {
     ctx.beginPath();
 
     for (let x = 0; x < 960; x += 20) {
-      const waveY = y + Math.sin((x * 0.03) + level3Wave) * 8;
+      const waveY = y + Math.sin((x * 0.03) + cruiseWave) * 8;
       if (x === 0) ctx.moveTo(x, waveY);
       else ctx.lineTo(x, waveY);
     }
 
     ctx.stroke();
   }
+}
+
+function drawTriangle(x1, y1, x2, y2, x3, y3) {
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.lineTo(x3, y3);
+  ctx.closePath();
+  ctx.fill();
 }
 
 /* ---------- COMPLETE ---------- */
@@ -659,9 +780,9 @@ function showComplete() {
   completeTitle.textContent = `LEVEL ${currentLevel} CLEARED`;
 
   if (currentLevel === 1) {
-    completeText.textContent = "Beach stop complete. The drive was easy, but cute.";
+    completeText.textContent = "Juice secured. Beach spot claimed before anyone took it.";
   } else if (currentLevel === 2) {
-    completeText.textContent = "Mountain chill complete. Chairs are set, view secured.";
+    completeText.textContent = "Fries, steak, photos, smoke, and kisses. No witnesses.";
   } else {
     completeText.textContent = "Cruise complete. Alam Palace looks perfect from here.";
   }
@@ -669,7 +790,7 @@ function showComplete() {
   popup.classList.remove("hidden");
 }
 
-/* ---------- CLICK HELPERS ---------- */
+/* ---------- HELPERS ---------- */
 
 function getCanvasPoint(e) {
   const rect = canvas.getBoundingClientRect();
@@ -689,31 +810,8 @@ function isInside(point, box) {
   );
 }
 
-/* ---------- OPTIONAL KEY / MOBILE SUPPORT ---------- */
-
-window.addEventListener("keydown", e => {
-  keys[e.key] = true;
-});
-
-window.addEventListener("keyup", e => {
-  keys[e.key] = false;
-});
-
-document.querySelectorAll(".mobile-controls button").forEach(btn => {
-  const key = btn.dataset.key;
-
-  btn.addEventListener("touchstart", e => {
-    e.preventDefault();
-    keys[key] = true;
-  });
-
-  btn.addEventListener("touchend", e => {
-    e.preventDefault();
-    keys[key] = false;
-  });
-
-  btn.addEventListener("mousedown", () => keys[key] = true);
-  btn.addEventListener("mouseup", () => keys[key] = false);
-});
+function distance(x1, y1, x2, y2) {
+  return Math.hypot(x1 - x2, y1 - y2);
+}
 
 renderOptions();
