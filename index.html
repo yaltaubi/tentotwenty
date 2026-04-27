@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Level 2</title>
 
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>❤️</text></svg>">
@@ -16,23 +16,11 @@
   <div class="background-overlay"></div>
 
   <main class="app">
-
-    <section id="quiz-screen" class="screen">
-      <div class="pixel-card">
-        <p class="level-label">LEVEL 2</p>
-        <h1>نسبة وتناسب</h1>
-        <p class="question">What are the ingredients of نسبة وتناسب?</p>
-
-        <div id="options" class="options"></div>
-
-        <button id="submit-quiz" class="pixel-btn">SUBMIT</button>
-        <p id="quiz-message" class="message"></p>
-      </div>
-    </section>
-
-    <section id="level-screen" class="screen hidden">
+    <section id="home-screen" class="screen">
       <div class="pixel-card wide">
-        <p class="level-label">CHOOSE YOUR SPOT</p>
+        <p class="label">LEVEL 2</p>
+        <h1>CHOOSE YOUR SPOT</h1>
+        <p class="subtitle">all levels available</p>
 
         <div class="level-grid">
           <button class="level-btn" data-level="1">
@@ -51,45 +39,45 @@
           </button>
         </div>
 
-        <p id="level-message" class="message">Pick any spot.</p>
+        <p id="menu-message" class="message">Pick a spot to start.</p>
       </div>
     </section>
 
     <section id="game-screen" class="screen hidden">
-      <div class="game-wrap">
+      <div class="game-shell">
         <div class="game-top">
           <button id="back-btn" class="small-btn">BACK</button>
-          <p id="game-title">LEVEL</p>
-          <p id="game-hint">Click to play</p>
+          <div>
+            <p id="game-title">LEVEL</p>
+            <p id="game-hint">hint</p>
+          </div>
+          <p id="status">♥ ♥ ♥</p>
         </div>
 
         <canvas id="game-canvas" width="960" height="540"></canvas>
       </div>
     </section>
 
-    <div id="complete-popup" class="popup hidden">
+    <div id="popup" class="popup hidden">
       <div class="popup-card">
-        <h2 id="complete-title">LEVEL CLEARED</h2>
-        <p id="complete-text"></p>
-        <button id="continue-btn" class="pixel-btn">CONTINUE</button>
+        <h2 id="popup-title">LEVEL CLEARED</h2>
+        <p id="popup-text"></p>
+        <button id="popup-btn" class="pixel-btn">CONTINUE</button>
       </div>
     </div>
 
     <section id="teaser-screen" class="screen hidden">
       <div class="pixel-card">
-        <p class="level-label">COMING SOON</p>
+        <p class="label">COMING SOON</p>
         <h1>LEVEL 4</h1>
-        <p class="question">Something is waiting on the track...</p>
+        <p class="subtitle">something is waiting on the track...</p>
 
         <div class="runner-teaser">
           <div class="runner"></div>
-          <div class="track-line"></div>
+          <div class="track"></div>
         </div>
-
-        <p class="message">not everything is a drive. some things are a run.</p>
       </div>
     </section>
-
   </main>
 
   <script src="script.js"></script>
