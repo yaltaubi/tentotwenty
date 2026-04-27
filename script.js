@@ -16,7 +16,6 @@ const popupBtn = document.getElementById("popup-btn");
 
 const backBtn = document.getElementById("back-btn");
 const menuMessage = document.getElementById("menu-message");
-
 const levelButtons = document.querySelectorAll(".level-btn");
 
 let currentLevel = 1;
@@ -25,26 +24,9 @@ let frameId = null;
 let lastTime = 0;
 let levelDone = false;
 
-const assets = {};
-const assetFiles = {
-  juiceLogo: "assets/logo_juice_palace.png",
-  beach: "assets/scene_beach.png",
-  mountain: "assets/scene_mountain.png",
-  cruise: "assets/scene_cruise.png",
-  juice: "assets/icon_juice.png",
-  camera: "assets/icon_camera.png",
-  fries: "assets/icon_fries.png",
-  steak: "assets/icon_steak.png",
-  heart: "assets/icon_heart.png"
-};
-
-Object.entries(assetFiles).forEach(([key, src]) => {
-  const img = new Image();
-  img.src = src;
-  img.onload = () => assets[key] = img;
-});
-
-/* ---------------- MENU ---------------- */
+let beach = {};
+let mountain = {};
+let cruise = {};
 
 levelButtons.forEach(btn => {
   btn.addEventListener("click", () => {
@@ -84,12 +66,6 @@ function updateMenu() {
     : "Pick a spot to start.";
 }
 
-/* ---------------- STATE ---------------- */
-
-let beach = {};
-let mountain = {};
-let cruise = {};
-
 function startLevel(level) {
   currentLevel = level;
   levelDone = false;
@@ -107,32 +83,32 @@ function startLevel(level) {
   startLoop();
 }
 
-/* ---------------- LEVEL 1 ---------------- */
-/* Juice Palace -> choose ingredients -> timed beach spot */
+/* ---------------- LEVEL 1: JUICE + BEACH ---------------- */
 
 function setupBeach() {
   gameTitle.textContent = "01 JUICE + BEACH";
+
   beach = {
     phase: "juice",
-    timer: 22,
+    timer: 18,
     selected: [],
-    message: "Pick the نسبة وتناسب ingredients at Juice Palace.",
+    message: "Make نسبة وتناسب. Pick the correct ingredients.",
     ingredients: [
       { name: "Grape", correct: true, x: 95, y: 345 },
-      { name: "Passion", correct: true, x: 210, y: 345 },
-      { name: "Pomegranate", correct: true, x: 350, y: 345 },
-      { name: "Berry", correct: true, x: 510, y: 345 },
-      { name: "Orange", correct: true, x: 660, y: 345 },
-      { name: "Mango", correct: false, x: 810, y: 345 },
-      { name: "Mint", correct: false, x: 150, y: 445 },
-      { name: "Lemon", correct: false, x: 300, y: 445 },
-      { name: "Peach", correct: false, x: 450, y: 445 },
-      { name: "Vanilla", correct: false, x: 620, y: 445 }
+      { name: "Passion", correct: true, x: 220, y: 345 },
+      { name: "Pomegranate", correct: true, x: 365, y: 345 },
+      { name: "Berry", correct: true, x: 535, y: 345 },
+      { name: "Orange", correct: true, x: 690, y: 345 },
+      { name: "Mango", correct: false, x: 830, y: 345 },
+      { name: "Mint", correct: false, x: 170, y: 445 },
+      { name: "Lemon", correct: false, x: 330, y: 445 },
+      { name: "Peach", correct: false, x: 490, y: 445 },
+      { name: "Vanilla", correct: false, x: 660, y: 445 }
     ],
     spots: [
-      { x: 700, y: 310, w: 110, h: 75, good: true, taken: false },
-      { x: 580, y: 375, w: 100, h: 70, good: false, taken: false },
-      { x: 820, y: 390, w: 95, h: 65, good: false, taken: false }
+      { x: 690, y: 302, w: 120, h: 78, good: true, taken: false },
+      { x: 570, y: 380, w: 105, h: 70, good: false, taken: false },
+      { x: 820, y: 392, w: 95, h: 65, good: false, taken: false }
     ]
   };
 
@@ -161,11 +137,12 @@ function beachClick(e) {
     if (selected === correct) {
       beach.phase = "spot";
       beach.timer = 18;
-      beach.message = "Now find the best beach spot before someone takes it.";
+      gameHint.textContent = "Perfect. Now find the best beach spot before someone takes it.";
       statusEl.textContent = "TIME 18";
+    } else if (beach.selected.length >= 5) {
+      gameHint.textContent = "Something is off. Remove the wrong ingredient.";
     }
 
-    gameHint.textContent = beach.message;
     return;
   }
 
@@ -181,16 +158,16 @@ function beachClick(e) {
       winLevel("Juice secured. Best beach spot claimed.");
     } else {
       spot.taken = true;
-      gameHint.textContent = "Too basic. Try a better spot.";
+      gameHint.textContent = "Too exposed. Try a better spot.";
     }
   }
 }
 
-/* ---------------- LEVEL 2 ---------------- */
-/* Mountain: tasks, photos, bars, guard */
+/* ---------------- LEVEL 2: MOUNTAIN HIDEOUT ---------------- */
 
 function setupMountain() {
   gameTitle.textContent = "02 MOUNTAIN HIDEOUT";
+
   mountain = {
     lives: 3,
     fries: false,
@@ -198,14 +175,35 @@ function setupMountain() {
     photos: 0,
     smoke: 0,
     kiss: 0,
+    cardRound: 0,
+    cardOpen: [],
+    cardMessage: "",
     guardX: 110,
     guardDir: 1,
     cooldown: 0,
-    message: "Start at the steak + fries truck."
+    message: "Get steak + fries, take photos, play cards, fill the bars. Avoid the guard."
   };
+
+  mountain.cards = makeMountainCards();
 
   gameHint.textContent = mountain.message;
   canvas.onclick = mountainClick;
+}
+
+function makeMountainCards() {
+  const labels = ["Q♥", "Q♥", "K♠", "K♠", "A♦", "A♦"];
+  return labels
+    .sort(() => Math.random() - 0.5)
+    .map((label, i) => ({
+      id: i,
+      label,
+      matched: false,
+      open: false,
+      x: 410 + (i % 3) * 48,
+      y: 390 + Math.floor(i / 3) * 54,
+      w: 36,
+      h: 46
+    }));
 }
 
 function mountainClick(e) {
@@ -214,7 +212,7 @@ function mountainClick(e) {
   if (inside(p, { x: 70, y: 300, w: 235, h: 130 })) {
     mountain.fries = true;
     mountain.steak = true;
-    mountain.message = "Food secured. Take 4 digicam photos.";
+    mountain.message = "Food secured. Now take 4 digicam photos.";
   }
 
   if (inside(p, { x: 350, y: 255, w: 145, h: 110 })) {
@@ -223,23 +221,72 @@ function mountainClick(e) {
   }
 
   if (inside(p, { x: 560, y: 330, w: 135, h: 95 })) {
-    mountain.smoke = Math.min(100, mountain.smoke + 20);
-    mountain.message = "Smoking bar filling...";
+    if (guardWatching()) punishGuard("Guard saw the smoke.");
+    else {
+      mountain.smoke = Math.min(100, mountain.smoke + 20);
+      mountain.message = "Smoking bar filling...";
+    }
   }
 
   if (inside(p, { x: 720, y: 330, w: 135, h: 95 })) {
-    mountain.kiss = Math.min(100, mountain.kiss + 20);
-    mountain.message = "Kissing bar filling...";
+    if (guardWatching()) punishGuard("Guard saw the kiss.");
+    else {
+      mountain.kiss = Math.min(100, mountain.kiss + 20);
+      mountain.message = "Kissing bar filling...";
+    }
   }
+
+  const card = mountain.cards.find(c => inside(p, c) && !c.matched && !c.open);
+  if (card) openMountainCard(card);
 
   gameHint.textContent = mountain.message;
 }
 
-/* ---------------- LEVEL 3 ---------------- */
-/* Cruise: click sequence */
+function openMountainCard(card) {
+  if (mountain.cardOpen.length >= 2) return;
+
+  card.open = true;
+  mountain.cardOpen.push(card);
+
+  if (mountain.cardOpen.length === 2) {
+    const [a, b] = mountain.cardOpen;
+
+    if (a.label === b.label) {
+      a.matched = true;
+      b.matched = true;
+      mountain.cardOpen = [];
+      mountain.message = "Card pair matched.";
+    } else {
+      mountain.message = "Not a pair.";
+      setTimeout(() => {
+        a.open = false;
+        b.open = false;
+        mountain.cardOpen = [];
+      }, 650);
+    }
+  }
+}
+
+function guardWatching() {
+  return mountain.guardX > 530 && mountain.guardX < 835 && mountain.cooldown <= 0;
+}
+
+function punishGuard(text) {
+  mountain.lives--;
+  mountain.cooldown = 2.2;
+  mountain.message = `${text} Act normal.`;
+
+  if (mountain.lives <= 0) {
+    mountain.message = "Caught. Restarting mountain...";
+    setTimeout(setupMountain, 1000);
+  }
+}
+
+/* ---------------- LEVEL 3: ALAM CRUISE ---------------- */
 
 function setupCruise() {
   gameTitle.textContent = "03 ALAM CRUISE";
+
   cruise = {
     step: 0,
     wave: 0,
@@ -319,28 +366,19 @@ function update(dt) {
 
     if (mountain.cooldown > 0) mountain.cooldown -= dt;
 
-    const lookingAtThem = mountain.guardX > 545 && mountain.guardX < 805;
-    const riskyProgress = mountain.smoke > 0 || mountain.kiss > 0;
+    const allCardsMatched = mountain.cards.every(c => c.matched);
 
-    if (lookingAtThem && riskyProgress && mountain.cooldown <= 0) {
-      mountain.lives--;
-      mountain.cooldown = 2.2;
-      gameHint.textContent = "Coast Guard noticed. Act normal.";
-
-      if (mountain.lives <= 0) {
-        gameHint.textContent = "Caught. Restarting...";
-        setTimeout(setupMountain, 1000);
-      }
-    }
+    statusEl.textContent = "♥ ".repeat(mountain.lives).trim();
 
     if (
       mountain.fries &&
       mountain.steak &&
       mountain.photos >= 4 &&
       mountain.smoke >= 100 &&
-      mountain.kiss >= 100
+      mountain.kiss >= 100 &&
+      allCardsMatched
     ) {
-      winLevel("Food, photos, smoke, kisses. No witnesses.");
+      winLevel("Food, photos, cards, smoke, kisses. No witnesses.");
     }
   }
 }
@@ -354,13 +392,7 @@ function draw() {
 }
 
 function drawBeach() {
-  if (assets.beach) {
-    ctx.drawImage(assets.beach, 0, 0, 960, 540);
-  } else {
-    skySeaSand();
-    drawJuicePalace();
-  }
-
+  skySeaSand();
   drawJuicePalace();
 
   if (beach.phase === "juice") {
@@ -374,15 +406,11 @@ function drawBeach() {
 }
 
 function drawMountain() {
-  if (assets.mountain) {
-    ctx.drawImage(assets.mountain, 0, 0, 960, 540);
-  } else {
-    mountainBg();
-  }
-
+  mountainBg();
   drawTower(800, 100);
   drawFoodTruck(70, 300);
   drawCamera(380, 265);
+  drawCardGame();
   drawCoupleZones();
   drawGuard();
   drawMountainBars();
@@ -390,13 +418,7 @@ function drawMountain() {
 
 function drawCruise() {
   cruise.wave += 0.04;
-
-  if (assets.cruise) {
-    ctx.drawImage(assets.cruise, 0, 0, 960, 540);
-  } else {
-    cruiseBg();
-  }
-
+  cruiseBg();
   drawPalace(640, 165);
   drawWaves();
 
@@ -418,6 +440,8 @@ function skySeaSand() {
   ctx.fillStyle = "#f0c97b";
   ctx.fillRect(0, 230, 960, 310);
   drawSun(820, 60);
+  drawCloud(120, 70);
+  drawCloud(270, 50);
 }
 
 function mountainBg() {
@@ -473,8 +497,6 @@ function drawJuicePalace() {
   ctx.font = "16px monospace";
   ctx.fillText("JUICE PALACE", 145, 230);
 
-  if (assets.juiceLogo) ctx.drawImage(assets.juiceLogo, 305, 95, 88, 88);
-
   ctx.fillStyle = "#2458a6";
   ctx.fillRect(430, 205, 45, 100);
   ctx.fillStyle = "#ffcf69";
@@ -501,7 +523,6 @@ function drawSpot(s) {
   ctx.strokeStyle = "#fff4d6";
   ctx.lineWidth = 4;
   ctx.strokeRect(s.x, s.y, s.w, s.h);
-
   ctx.fillStyle = "#7b1730";
   ctx.fillRect(s.x + 20, s.y + 18, s.w - 40, 18);
 }
@@ -520,11 +541,6 @@ function drawFoodTruck(x, y) {
 }
 
 function drawCamera(x, y) {
-  if (assets.camera) {
-    ctx.drawImage(assets.camera, x, y, 100, 100);
-    return;
-  }
-
   ctx.fillStyle = "#222";
   ctx.fillRect(x, y, 105, 72);
   ctx.fillStyle = "#9cd7ff";
@@ -532,6 +548,32 @@ function drawCamera(x, y) {
   ctx.fillStyle = "#fff";
   ctx.font = "10px monospace";
   ctx.fillText("DIGICAM", x + 12, y + 58);
+}
+
+function drawCardGame() {
+  ctx.fillStyle = "#2b7a4b";
+  ctx.fillRect(400, 382, 185, 130);
+
+  ctx.strokeStyle = "#fff4d6";
+  ctx.lineWidth = 3;
+  ctx.strokeRect(400, 382, 185, 130);
+
+  ctx.fillStyle = "#fff4d6";
+  ctx.font = "10px monospace";
+  ctx.fillText("MATCH CARDS", 438, 405);
+
+  mountain.cards.forEach(card => {
+    ctx.fillStyle = card.open || card.matched ? "#fff4d6" : "#7b1730";
+    ctx.fillRect(card.x, card.y, card.w, card.h);
+
+    ctx.strokeStyle = "#111";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(card.x, card.y, card.w, card.h);
+
+    ctx.fillStyle = card.open || card.matched ? "#7b1730" : "#ffd15c";
+    ctx.font = "12px monospace";
+    ctx.fillText(card.open || card.matched ? card.label : "?", card.x + 7, card.y + 28);
+  });
 }
 
 function drawCoupleZones() {
@@ -576,10 +618,13 @@ function drawMountainBars() {
   drawBar(30, 94, "SMOKE", mountain.smoke / 100, "#b5b5b5");
   drawBar(30, 126, "KISS", mountain.kiss / 100, "#ff9ccf");
 
+  const pairs = mountain.cards.filter(c => c.matched).length / 2;
+  drawBar(30, 158, "CARDS", pairs / 3, "#ffd15c");
+
   ctx.fillStyle = "#fff4d6";
   ctx.font = "11px monospace";
-  ctx.fillText(`FRIES ${mountain.fries ? "YES" : "NO"}`, 30, 176);
-  ctx.fillText(`STEAK ${mountain.steak ? "YES" : "NO"}`, 30, 196);
+  ctx.fillText(`FRIES ${mountain.fries ? "YES" : "NO"}`, 30, 210);
+  ctx.fillText(`STEAK ${mountain.steak ? "YES" : "NO"}`, 30, 230);
 }
 
 function drawBar(x, y, label, amount, color) {
@@ -670,6 +715,13 @@ function drawTarget(box) {
 function drawSun(x, y) {
   ctx.fillStyle = "#ffd15c";
   ctx.fillRect(x, y, 44, 44);
+}
+
+function drawCloud(x, y) {
+  ctx.fillStyle = "#fff";
+  ctx.fillRect(x, y, 50, 20);
+  ctx.fillRect(x + 20, y - 14, 40, 34);
+  ctx.fillRect(x + 50, y + 5, 40, 15);
 }
 
 function drawHeart(x, y) {
