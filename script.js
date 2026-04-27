@@ -109,7 +109,6 @@ submitQuiz.addEventListener("click", () => {
       quizScreen.classList.add("hidden");
       levelScreen.classList.remove("hidden");
       document.body.classList.add("game-mode");
-      updateLevelButtons();
     }, 900);
 
   } else {
@@ -123,11 +122,6 @@ levelButtons.forEach(btn => {
   btn.addEventListener("click", () => {
     const level = Number(btn.dataset.level);
 
-    if (level > unlockedLevel) {
-      levelMessage.textContent = "locked for now.";
-      return;
-    }
-
     startLevel(level);
   });
 });
@@ -136,7 +130,6 @@ backBtn.addEventListener("click", () => {
   gameRunning = false;
   gameScreen.classList.add("hidden");
   levelScreen.classList.remove("hidden");
-  updateLevelButtons();
 });
 
 continueBtn.addEventListener("click", () => {
@@ -146,7 +139,6 @@ continueBtn.addEventListener("click", () => {
     unlockedLevel = Math.max(unlockedLevel, currentLevel + 1);
     gameScreen.classList.add("hidden");
     levelScreen.classList.remove("hidden");
-    updateLevelButtons();
   } else {
     gameScreen.classList.add("hidden");
     teaserScreen.classList.remove("hidden");
