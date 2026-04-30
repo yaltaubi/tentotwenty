@@ -9,33 +9,43 @@
   <script src="script.js" defer></script>
 </head>
 <body>
-  <div class="bg"></div>
+  <div id="loading-screen" class="loading-screen">
+    <div class="loading-card">
+      <span class="loading-mark">01</span>
+      <p id="loading-text">loading the spots...</p>
+    </div>
+  </div>
+
+  <div class="bg" aria-hidden="true"></div>
   <div id="particles" aria-hidden="true"></div>
 
   <main class="app">
     <section id="home-screen" class="screen">
-      <div class="panel wide">
+      <div class="home-panel">
         <p class="label">choose our next spot</p>
         <h1>steaks got higher</h1>
-        <p class="subtitle">A tiny 8-bit map of the usual chaos.</p>
+        <p class="subtitle">A tiny pixel map of the usual chaos.</p>
 
         <div class="level-grid">
-          <button class="level-btn" data-level="1" aria-label="Juice Palace memory game">
-            <span class="level-art juice-art"><img src="logo_juice_palace.png" alt="Juice Palace" onerror="this.hidden=true" /></span>
-            <span class="loc">نسبة وتناسب</span>
-            <span class="loc-sub">save the order before he confidently ruins it</span>
+          <button class="level-card" data-level="1" aria-label="Start spot one">
+            <span class="cover"><img src="logo_juice_palace.png" alt="" /></span>
+            <span class="number">01</span>
+            <span class="tease">Memorize the order. Catch the lies.</span>
+            <span class="progress-mark" aria-hidden="true">✓</span>
           </button>
 
-          <button class="level-btn" data-level="2" aria-label="Mountain spot setup game">
-            <span class="level-art mountain-art"><img src="scene_mountain.png" alt="Mountain spot" onerror="this.hidden=true" /></span>
-            <span class="loc">the parked promise</span>
-            <span class="loc-sub">park Jojo, set the spot, keep it together</span>
+          <button class="level-card" data-level="2" aria-label="Start spot two">
+            <span class="cover"><img src="scene_mountain.png" alt="" /></span>
+            <span class="number">02</span>
+            <span class="tease">Park Jojo. Build the setup. Protect the vibe.</span>
+            <span class="progress-mark" aria-hidden="true">✓</span>
           </button>
 
-          <button class="level-btn" data-level="3" aria-label="Cruise digicam stealth game">
-            <span class="level-art cruise-art"><img src="scene_cruise.png" alt="Cruise" onerror="this.hidden=true" /></span>
-            <span class="loc">quiet evidence</span>
-            <span class="loc-sub">take moments quietly, don’t get seen</span>
+          <button class="level-card" data-level="3" aria-label="Start spot three">
+            <span class="cover"><img src="scene_cruise.png" alt="" /></span>
+            <span class="number">03</span>
+            <span class="tease">Frame the memories. Avoid the patrol.</span>
+            <span class="progress-mark" aria-hidden="true">✓</span>
           </button>
         </div>
 
@@ -46,31 +56,39 @@
     <section id="game-screen" class="screen hidden">
       <div class="game-shell">
         <div class="game-top">
-          <button id="back-btn" class="small-btn" type="button">Back</button>
+          <button id="back-btn" class="tool-btn" type="button">spots</button>
           <div class="game-copy">
-            <p id="game-title">spot</p>
+            <p id="game-title">01</p>
             <p id="game-hint">Ready.</p>
           </div>
-          <p id="status">Ready</p>
+          <div class="game-actions">
+            <button id="pause-btn" class="tool-btn" type="button">pause</button>
+            <button id="mute-btn" class="tool-btn" type="button">mute</button>
+          </div>
         </div>
         <canvas id="game-canvas" width="960" height="540"></canvas>
+        <p id="status" class="status-line">Ready</p>
       </div>
     </section>
 
     <div id="popup" class="popup hidden">
       <div class="popup-card">
-        <div class="popup-hearts" aria-hidden="true">♥ ♥ ♥</div>
-        <h2 id="popup-title">saved</h2>
+        <p id="popup-kicker" class="label">saved</p>
+        <h2 id="popup-title">memory kept</h2>
         <p id="popup-text"></p>
-        <button id="popup-btn" class="pixel-btn" type="button">Continue</button>
+        <div class="popup-actions">
+          <button id="replay-btn" class="pixel-btn" type="button">replay</button>
+          <button id="popup-spots-btn" class="pixel-btn ghost" type="button">spots</button>
+        </div>
       </div>
     </div>
 
     <section id="teaser-screen" class="screen hidden">
-      <div class="panel">
+      <div class="home-panel small">
         <p class="label">all spots cleared</p>
         <h1>the map folds itself</h1>
         <p class="subtitle">RAV4 and Jojo are already parked for the next one.</p>
+        <button id="teaser-back-btn" class="pixel-btn" type="button">back to spots</button>
       </div>
     </section>
   </main>
