@@ -1,74 +1,38 @@
-const homeScreen = document.getElementById("home-screen");
-const gameScreen = document.getElementById("game-screen");
-const teaserScreen = document.getElementById("teaser-screen");
-const loadingScreen = document.getElementById("loading-screen");
-const loadingText = document.getElementById("loading-text");
-const canvas = document.getElementById("game-canvas");
-const ctx = canvas.getContext("2d");
-ctx.imageSmoothingEnabled = false;
+/* Ten to Twenty: Three Games, One Memory Map */
 
-const gameTitle = document.getElementById("game-title");
-const gameHint = document.getElementById("game-hint");
-const statusEl = document.getElementById("status");
-const popup = document.getElementById("popup");
-const popupTitle = document.getElementById("popup-title");
-const popupText = document.getElementById("popup-text");
-const replayBtn = document.getElementById("replay-btn");
-const popupSpotsBtn = document.getElementById("popup-spots-btn");
-const backBtn = document.getElementById("back-btn");
-const pauseBtn = document.getElementById("pause-btn");
-const muteBtn = document.getElementById("mute-btn");
-const teaserBackBtn = document.getElementById("teaser-back-btn");
-const menuMessage = document.getElementById("menu-message");
-const levelButtons = [...document.querySelectorAll(".level-card")];
-const particles = document.getElementById("particles");
-
-const W = canvas.width;
-const H = canvas.height;
-const SAVE_KEY = "tenToTwentyDeepGameProgress";
+const W = 960;
+const H = 540;
+const SAVE_KEY = "ten-to-twenty-memory-map-v3";
 
 const COLORS = {
-  ink: "#070712",
-  night: "#10152a",
-  plum: "#2d1530",
-  rose: "#c63f5c",
-  coral: "#ff7b54",
-  teal: "#38c6b4",
-  gold: "#f8cf68",
-  cream: "#fff1d6",
+  ink: "#05050d",
+  night: "#0c1020",
+  panel: "#141225",
+  plum: "#27162d",
+  rose: "#d94d69",
+  coral: "#ff7c55",
+  teal: "#39d1c2",
+  gold: "#ffd36b",
+  cream: "#fff0d2",
   green: "#7cff9b",
-  danger: "#ff5a6d",
-  water: "#0d5a78"
-};
-
-const FRUIT = {
-  pomegranate: { label: "pomegranate", color: "#c63f5c" },
-  orange: { label: "orange", color: "#f89a2c" },
-  grape: { label: "grape", color: "#7a3fc7", asset: "grapes" },
-  berry: { label: "berry", color: "#8b2d63", asset: "berry" },
-  lemonMint: { label: "lemon mint", color: "#98d65c", asset: "lemonMint" },
-  mango: { label: "mango", color: "#ffc247", asset: "mango" },
-  peach: { label: "peach", color: "#ffb08a", asset: "peach" },
-  apple: { label: "apple", color: "#9bd36a", asset: "apple" },
-  watermelon: { label: "watermelon", color: "#44b866", asset: "watermelon" }
+  danger: "#ff5e75",
+  road: "#161922",
+  water: "#0b3453"
 };
 
 const ASSET_SOURCES = {
   leopard: "leopard-bg.jpg",
-  logo: "logo_juice_palace.png",
+  juiceLogo: "logo_juice_palace.png",
   egyptian: "egyptian.png",
   mountain: "scene_mountain.png",
   cruiseScene: "scene_cruise.png",
-  cruiseBoat: "cruise.png",
-  coastGuard: "coast_guard.png",
   rav4: "rav4.png",
   jojo: "jojo.png",
-  chairs: "chairs.png",
-  fries: "fries.png",
-  steak: "steak.png",
+  cruiseBoat: "cruise.png",
+  coastGuard: "coast_guard.png",
   digicam: "digicam.png",
-  cards: "playingcards.png",
-  grape: "grapes.png",
+  playingCards: "playingcards.png",
+  grapes: "grapes.png",
   berry: "berry.png",
   lemonMint: "lemonmint.png",
   mango: "mango.png",
@@ -77,22 +41,72 @@ const ASSET_SOURCES = {
   watermelon: "watermelon.png"
 };
 
-const assets = {};
-const keys = new Set();
-const completed = new Set(loadSaved());
+const FRUITS = {
+  pomegranate: { label: "Pomegranate", short: "pome", arabic: "رمان", color: "#c63f5c" },
+  orange: { label: "Orange", short: "orange", arabic: "برتقال", color: "#f7942f" },
+  grape: { label: "Grape", short: "grape", arabic: "عنب", color: "#7e4bd6", asset: "grapes" },
+  berry: { label: "Berry", short: "berry", arabic: "توت", color: "#9d2f68", asset: "berry" },
+  lemonMint: { label: "Lemon Mint", short: "mint", arabic: "ليمون نعناع", color: "#98d65c", asset: "lemonMint" },
+  mango: { label: "Mango", short: "mango", arabic: "مانجو", color: "#ffc247", asset: "mango" },
+  peach: { label: "Peach", short: "peach", arabic: "خوخ", color: "#ffb08a", asset: "peach" },
+  apple: { label: "Apple", short: "apple", arabic: "تفاح", color: "#8bcf58", asset: "apple" },
+  watermelon: { label: "Watermelon", short: "water", arabic: "بطيخ", color: "#44b866", asset: "watermelon" }
+};
 
-let currentLevel = 1;
+const WORKER_LINES = [
+  "الرمان أكيد.",
+  "والله يمكن برتقال.",
+  "توت؟ أو عنب؟ واحد منهم.",
+  "ليمون نعناع شئ.",
+  "مانجو أكيد.",
+  "أنا فاكر الطلب، أنتم بس ركزوا معي.",
+  "نسبة وتناسب تحتاج ثقة."
+];
+
+const dom = {
+  loading: document.getElementById("loading-screen"),
+  loadingText: document.getElementById("loading-text"),
+  home: document.getElementById("home-screen"),
+  game: document.getElementById("game-screen"),
+  final: document.getElementById("final-screen"),
+  canvas: document.getElementById("game-canvas"),
+  title: document.getElementById("game-title"),
+  hint: document.getElementById("game-hint"),
+  status: document.getElementById("status"),
+  popup: document.getElementById("popup"),
+  popupTitle: document.getElementById("popup-title"),
+  popupText: document.getElementById("popup-text"),
+  replay: document.getElementById("replay-btn"),
+  popupSpots: document.getElementById("popup-spots-btn"),
+  back: document.getElementById("back-btn"),
+  pause: document.getElementById("pause-btn"),
+  mute: document.getElementById("mute-btn"),
+  finalBack: document.getElementById("final-back-btn"),
+  menuMessage: document.getElementById("menu-message"),
+  levelCards: [...document.querySelectorAll(".level-card")],
+  particles: document.getElementById("particles")
+};
+
+const ctx = dom.canvas.getContext("2d");
+ctx.imageSmoothingEnabled = false;
+
+const assets = {};
+const completed = new Set(loadProgress());
+const keys = new Set();
+
+let rngState = (Date.now() ^ Math.floor(Math.random() * 0xffffffff)) >>> 0;
+let currentLevel = 0;
 let game = null;
 let raf = null;
 let lastTime = 0;
 let clock = 0;
 let paused = false;
 let muted = false;
-let pointer = { x: 0, y: 0, down: false };
+let pointer = { x: W / 2, y: H / 2, down: false };
 let floaters = [];
 let bursts = [];
 
-function loadSaved() {
+function loadProgress() {
   try {
     return JSON.parse(localStorage.getItem(SAVE_KEY) || "[]");
   } catch {
@@ -104,36 +118,31 @@ function saveProgress() {
   try {
     localStorage.setItem(SAVE_KEY, JSON.stringify([...completed]));
   } catch {
-    /* Progress still works for the current session if storage is blocked. */
+    /* localStorage can be disabled; session progress still works. */
   }
 }
 
-function loadAsset(key, src) {
-  const record = { img: new Image(), ready: false, failed: false };
-  const done = new Promise((resolve) => {
-    record.img.onload = () => {
+function preloadAssets() {
+  const jobs = Object.entries(ASSET_SOURCES).map(([key, src]) => new Promise((resolve) => {
+    const img = new Image();
+    const record = { img, ready: false, failed: false };
+    assets[key] = record;
+    img.onload = () => {
       record.ready = true;
       resolve(record);
     };
-    record.img.onerror = () => {
+    img.onerror = () => {
       record.failed = true;
       resolve(record);
     };
-  });
-  record.img.src = src;
-  assets[key] = record;
-  return done;
-}
+    img.src = src;
+  }));
 
-function bootAssets() {
-  const jobs = Object.entries(ASSET_SOURCES).map(([key, src]) => loadAsset(key, src));
   Promise.all(jobs).then(() => {
-    loadingText.textContent = "ready";
-    setTimeout(() => loadingScreen.classList.add("hidden"), 220);
+    dom.loadingText.textContent = "ready";
+    setTimeout(() => dom.loading.classList.add("hidden"), 220);
   });
 }
-
-bootAssets();
 
 function cue(name) {
   if (muted) return;
@@ -143,129 +152,154 @@ function cue(name) {
 function ambientParticle() {
   const el = document.createElement("span");
   el.className = "particle";
-  el.textContent = ["♥", "♡", "✦", "·"][Math.floor(Math.random() * 4)];
+  el.textContent = randomChoice(["♥", "♡", "✦", "·", "Q", "K"]);
   el.style.left = `${Math.random() * 100}vw`;
   el.style.animationDuration = `${7 + Math.random() * 9}s`;
-  el.style.fontSize = `${10 + Math.random() * 12}px`;
-  el.style.color = [COLORS.gold, COLORS.rose, COLORS.teal, COLORS.cream][Math.floor(Math.random() * 4)];
-  particles.appendChild(el);
+  el.style.fontSize = `${10 + Math.random() * 13}px`;
+  el.style.color = randomChoice([COLORS.gold, COLORS.rose, COLORS.teal, COLORS.cream]);
+  dom.particles.appendChild(el);
   setTimeout(() => el.remove(), 17000);
 }
 
-setInterval(ambientParticle, 800);
-for (let i = 0; i < 8; i += 1) setTimeout(ambientParticle, i * 150);
+function bindUi() {
+  dom.levelCards.forEach((btn) => {
+    btn.addEventListener("click", () => startLevel(Number(btn.dataset.level)));
+  });
 
-levelButtons.forEach((btn) => btn.addEventListener("click", () => startLevel(Number(btn.dataset.level))));
-backBtn.addEventListener("click", goHome);
-popupSpotsBtn.addEventListener("click", goHome);
-teaserBackBtn.addEventListener("click", goHome);
-replayBtn.addEventListener("click", () => {
-  popup.classList.add("hidden");
-  startLevel(currentLevel);
-});
-pauseBtn.addEventListener("click", togglePause);
-muteBtn.addEventListener("click", () => {
-  muted = !muted;
-  muteBtn.textContent = muted ? "muted" : "mute";
-});
+  dom.back.addEventListener("click", goHome);
+  dom.finalBack.addEventListener("click", goHome);
+  dom.replay.addEventListener("click", () => {
+    dom.popup.classList.add("hidden");
+    startLevel(currentLevel);
+  });
+  dom.popupSpots.addEventListener("click", () => {
+    if (completed.size >= 3 && game?.finished) showFinal();
+    else goHome();
+  });
+  dom.pause.addEventListener("click", togglePause);
+  dom.mute.addEventListener("click", () => {
+    muted = !muted;
+    dom.mute.textContent = muted ? "muted" : "mute";
+    cue("mute-toggle");
+  });
 
-window.addEventListener("keydown", (event) => {
-  const key = event.key.toLowerCase();
-  keys.add(key);
-  if (["arrowup", "arrowdown", "arrowleft", "arrowright", " "].includes(key)) event.preventDefault();
-  if (key === "p") togglePause();
-  if (key === "escape") goHome();
-  if ((key === " " || key === "e") && game) {
-    if (currentLevel === 3) game.captureHeld = true;
-    else levelAction();
-  }
-});
-
-window.addEventListener("keyup", (event) => {
-  const key = event.key.toLowerCase();
-  keys.delete(key);
-  if ((key === " " || key === "e") && game && currentLevel === 3) game.captureHeld = false;
-});
-
-canvas.addEventListener("pointerdown", (event) => {
-  pointer = { ...point(event), down: true };
-  handlePointerDown(pointer);
-});
-
-canvas.addEventListener("pointermove", (event) => {
-  pointer = { ...point(event), down: pointer.down };
-  handlePointerMove(pointer);
-});
-
-window.addEventListener("pointerup", (event) => {
-  const p = event.clientX === undefined ? pointer : pointFromClient(event.clientX, event.clientY);
-  pointer.down = false;
-  handlePointerUp(p);
-});
-
-function updateMenu() {
-  levelButtons.forEach((btn) => btn.classList.toggle("done", completed.has(Number(btn.dataset.level))));
-  menuMessage.textContent = completed.size ? `${completed.size}/3 spots saved.` : "Pick a spot to start.";
+  window.addEventListener("keydown", onKeyDown);
+  window.addEventListener("keyup", onKeyUp);
+  dom.canvas.addEventListener("pointerdown", onPointerDown);
+  dom.canvas.addEventListener("pointermove", onPointerMove);
+  window.addEventListener("pointerup", onPointerUp);
 }
 
-updateMenu();
+function onKeyDown(event) {
+  const key = event.key.toLowerCase();
+  if (["arrowleft", "arrowright", "arrowup", "arrowdown", " "].includes(key)) {
+    event.preventDefault();
+  }
+  if (!keys.has(key)) {
+    if ((key === " " || key === "enter") && currentLevel === 1) stopJuiceRatio();
+    if ((key === " " || key === "enter") && currentLevel === 3) beginCruiseCapture();
+  }
+  keys.add(key);
+  if (key === "p") togglePause();
+  if (key === "escape") goHome();
+}
+
+function onKeyUp(event) {
+  const key = event.key.toLowerCase();
+  keys.delete(key);
+  if ((key === " " || key === "enter") && currentLevel === 3) releaseCruiseCapture();
+}
+
+function onPointerDown(event) {
+  pointer = { ...point(event), down: true };
+  try {
+    dom.canvas.setPointerCapture(event.pointerId);
+  } catch {
+    /* Some browsers do not support capture on all pointer types. */
+  }
+  if (!game || paused || !dom.popup.classList.contains("hidden")) return;
+  if (currentLevel === 1) juicePointerDown(pointer);
+  if (currentLevel === 2) roadPointerDown(pointer);
+  if (currentLevel === 3) cruisePointerDown(pointer);
+}
+
+function onPointerMove(event) {
+  pointer = { ...point(event), down: pointer.down };
+  if (!game || paused || !dom.popup.classList.contains("hidden")) return;
+  if (currentLevel === 2) roadPointerMove(pointer);
+  if (currentLevel === 3) cruisePointerMove(pointer);
+}
+
+function onPointerUp(event) {
+  const p = event.clientX === undefined ? pointer : pointFromClient(event.clientX, event.clientY);
+  pointer.down = false;
+  if (!game || paused) return;
+  if (currentLevel === 2) roadPointerUp(p);
+  if (currentLevel === 3) cruisePointerUp(p);
+}
+
+function updateMenu() {
+  dom.levelCards.forEach((btn) => btn.classList.toggle("done", completed.has(Number(btn.dataset.level))));
+  dom.menuMessage.textContent = completed.size ? `${completed.size}/3 memories saved.` : "Pick a spot to start.";
+}
 
 function startLevel(level) {
   currentLevel = level;
   paused = false;
-  pauseBtn.textContent = "pause";
+  dom.pause.textContent = "pause";
   clock = 0;
   floaters = [];
   bursts = [];
-  popup.classList.add("hidden");
-  homeScreen.classList.add("hidden");
-  teaserScreen.classList.add("hidden");
-  gameScreen.classList.remove("hidden");
+  pointer = { x: W / 2, y: H / 2, down: false };
+  dom.popup.classList.add("hidden");
+  dom.home.classList.add("hidden");
+  dom.final.classList.add("hidden");
+  dom.game.classList.remove("hidden");
   document.body.classList.add("game-mode");
   if (level === 1) setupJuice();
-  if (level === 2) setupMountain();
+  if (level === 2) setupRoad();
   if (level === 3) setupCruise();
   stopLoop();
   startLoop();
 }
 
 function goHome() {
-  popup.classList.add("hidden");
-  gameScreen.classList.add("hidden");
-  teaserScreen.classList.add("hidden");
-  homeScreen.classList.remove("hidden");
+  dom.popup.classList.add("hidden");
+  dom.game.classList.add("hidden");
+  dom.final.classList.add("hidden");
+  dom.home.classList.remove("hidden");
   document.body.classList.remove("game-mode");
   stopLoop();
   updateMenu();
 }
 
-function showTeaser() {
-  popup.classList.add("hidden");
-  gameScreen.classList.add("hidden");
-  homeScreen.classList.add("hidden");
-  teaserScreen.classList.remove("hidden");
+function showFinal() {
+  dom.popup.classList.add("hidden");
+  dom.game.classList.add("hidden");
+  dom.home.classList.add("hidden");
+  dom.final.classList.remove("hidden");
   document.body.classList.remove("game-mode");
   stopLoop();
   updateMenu();
 }
 
 function togglePause() {
-  if (!game || popup.classList.contains("hidden") === false) return;
+  if (!game || !dom.popup.classList.contains("hidden")) return;
   paused = !paused;
-  pauseBtn.textContent = paused ? "resume" : "pause";
+  dom.pause.textContent = paused ? "resume" : "pause";
 }
 
 function setHint(text) {
-  gameHint.textContent = text;
+  dom.hint.textContent = text;
 }
 
 function setStatus(text) {
-  statusEl.innerHTML = text.replace(/\n/g, "<br>");
+  dom.status.innerHTML = text.replace(/\n/g, "<br>");
 }
 
 function startLoop() {
   lastTime = performance.now();
-  function loop(now) {
+  const loop = (now) => {
     const dt = Math.min((now - lastTime) / 1000, 0.05);
     lastTime = now;
     if (!paused) {
@@ -275,7 +309,7 @@ function startLoop() {
     drawGame();
     if (paused) drawPauseOverlay();
     raf = requestAnimationFrame(loop);
-  }
+  };
   raf = requestAnimationFrame(loop);
 }
 
@@ -284,37 +318,13 @@ function stopLoop() {
   raf = null;
 }
 
-function finishLevel(text) {
-  if (!game || game.finished) return;
-  game.finished = true;
-  cue("level-saved");
-  completed.add(currentLevel);
-  saveProgress();
-  popupTitle.textContent = "memory kept";
-  popupText.textContent = text;
-  popup.classList.remove("hidden");
-  if (completed.size >= 3) {
-    popupSpotsBtn.textContent = "map";
-  } else {
-    popupSpotsBtn.textContent = "spots";
-  }
-}
-
-function hurt(text, amount = 1) {
-  game.hearts -= amount;
-  shake();
-  cue("mistake");
-  floatText(text, W / 2, 112, COLORS.danger);
-  if (game.hearts <= 0) {
-    setHint("Resetting this tiny disaster.");
-    setTimeout(() => startLevel(currentLevel), 760);
-  }
-}
-
 function updateGame(dt) {
-  if (!game || game.finished) return;
+  if (!game || game.finished) {
+    updateEffects(dt);
+    return;
+  }
   if (currentLevel === 1) updateJuice(dt);
-  if (currentLevel === 2) updateMountain(dt);
+  if (currentLevel === 2) updateRoad(dt);
   if (currentLevel === 3) updateCruise(dt);
   updateEffects(dt);
 }
@@ -324,960 +334,1041 @@ function drawGame() {
   ctx.imageSmoothingEnabled = false;
   ctx.clearRect(0, 0, W, H);
   if (currentLevel === 1) drawJuice();
-  if (currentLevel === 2) drawMountain();
+  if (currentLevel === 2) drawRoad();
   if (currentLevel === 3) drawCruise();
 }
 
-function levelAction() {
-  if (!game || paused) return;
-  if (currentLevel === 1) juiceAction();
-  if (currentLevel === 2) mountainAction();
+function finishLevel(text) {
+  if (!game || game.finished) return;
+  game.finished = true;
+  cue("memory-saved");
+  completed.add(currentLevel);
+  saveProgress();
+  updateMenu();
+  dom.popupTitle.textContent = "memory kept";
+  dom.popupText.textContent = text;
+  dom.popupSpots.textContent = completed.size >= 3 ? "cards" : "spots";
+  dom.popup.classList.remove("hidden");
 }
 
-function handlePointerDown(p) {
-  if (!game || paused) return;
-  if (currentLevel === 1) juicePointer(p);
-  if (currentLevel === 2) mountainPointerDown(p);
-  if (currentLevel === 3) cruisePointerDown(p);
+function loseHeart(text) {
+  if (!game || game.finished || game.hurtCooldown > 0) return;
+  game.hearts -= 1;
+  game.hurtCooldown = 0.7;
+  shake();
+  cue("mistake");
+  floatText(text, W / 2, 106, COLORS.danger);
+  if (game.hearts <= 0) {
+    game.finished = true;
+    setHint("Resetting this one.");
+    setTimeout(() => startLevel(currentLevel), 850);
+  }
 }
 
-function handlePointerMove(p) {
-  if (!game || paused) return;
-  if (currentLevel === 2) mountainPointerMove(p);
-  if (currentLevel === 3) cruisePointerMove(p);
-}
-
-function handlePointerUp(p) {
-  if (!game || paused) return;
-  if (currentLevel === 2) mountainPointerUp(p);
-  if (currentLevel === 3) game.captureHeld = false;
-}
-
-/* LEVEL 01: MEMORY, DECEPTION, TIMING */
+/* LEVEL 01: FALLING ORDER CHAOS */
 
 function setupJuice() {
-  gameTitle.textContent = "01";
-  setHint("Memorize the order. Catch the lies.");
-  const statements = shuffle([
-    { text: "He says lemon mint is part of نسبة وتناسب.", truth: false },
-    { text: "He says pomegranate belongs in the order.", truth: true },
-    { text: "He says orange is not in the order.", truth: false },
-    { text: "He says grape comes before berry.", truth: true },
-    { text: "He says berry is the last ingredient.", truth: true }
-  ]).slice(0, 4);
-
+  dom.title.textContent = "01";
+  setHint("Read him. Mix it right.");
+  const recipe = ["pomegranate", "orange", "grape", "berry"];
   game = {
-    phase: "preview",
-    phaseTime: 3,
+    id: "juice",
+    phase: "flash",
+    phaseTime: 0,
     hearts: 3,
+    hurtCooldown: 0,
+    recipe,
+    receiptOrder: shuffle(recipe),
+    accepted: [],
     mistakes: 0,
-    recipeName: "نسبة وتناسب",
-    recipe: ["pomegranate", "orange", "grape", "berry"],
-    buildGoal: 3,
-    selected: [],
-    statements,
-    statementIndex: 0,
-    statementTimer: 7,
-    workerLine: "رمان صح؟ خلاص أهم شي.",
-    workerTimer: 2.2,
-    cup: 0,
-    ratio: 0,
-    ratioDir: 1,
-    finalQueue: shuffle(["pomegranate", "lemonMint", "berry"]),
-    finalIndex: 0,
-    finalTimer: 1.9,
-    fruit: [
-      fruitBox("lemonMint", 120, 390),
-      fruitBox("pomegranate", 250, 454),
-      fruitBox("mango", 365, 384),
-      fruitBox("grape", 492, 454),
-      fruitBox("berry", 616, 384),
-      fruitBox("orange", 742, 454),
-      fruitBox("peach", 850, 384)
-    ]
+    queue: makeJuiceQueue(),
+    currentDrop: null,
+    dropDelay: 0.4,
+    dropsHandled: 0,
+    workerLine: "الرمان أكيد.",
+    blender: [],
+    muddy: 0,
+    ratioPos: randRange(0.1, 0.9),
+    ratioCenter: randRange(0.54, 0.64),
+    ratioDir: maybe(0.5) ? 1 : -1,
+    ratioSpeed: randRange(0.95, 1.22),
+    ratioDone: false,
+    workerBlink: 0
   };
 }
 
-function fruitBox(name, x, y) {
-  return { name, x, y, w: 88, h: 78 };
+function makeJuiceQueue() {
+  const decoys = shuffle(["lemonMint", "mango", "peach", "apple", "watermelon"]).slice(0, 4);
+  const traps = shuffle(["pomegranate", "lemonMint", "mango"]).slice(0, 2);
+  const middle = shuffle(["orange", "grape", "berry", ...decoys, ...traps]);
+  const queue = [{ fruit: "pomegranate", line: "الرمان أكيد.", first: true }];
+  middle.forEach((fruit) => queue.push({ fruit, line: lineForFruit(fruit) }));
+  queue.splice(3 + Math.floor(rand() * 4), 0, { fruit: "pomegranate", line: "رمان مرة ثانية؟ خلاص أهم شي." });
+  return queue;
 }
 
-function juicePointer(p) {
-  if (game.phase === "statements") {
-    if (inside(p, trueBox())) answerStatement(true);
-    if (inside(p, falseBox())) answerStatement(false);
-    return;
-  }
-
-  if (game.phase === "build") {
-    if (game.sneak && inside(p, rejectBox())) {
-      game.sneak = false;
-      game.workerLine = "أنا ما نسيت، أنا بس أختبركم.";
-      floatText("rejected", 742, 174, COLORS.green);
-      return;
-    }
-    if (game.sneak && inside(p, acceptBox())) {
-      game.sneak = false;
-      hurt("pomegranate again?", 1);
-      return;
-    }
-    const hit = game.fruit.find((f) => insideFruit(p, f));
-    if (hit) chooseJuiceFruit(hit.name, hit.x, hit.y);
-    return;
-  }
-
-  if (game.phase === "ratio") {
-    juiceAction();
-    return;
-  }
-
-  if (game.phase === "final") {
-    if (inside(p, finalAcceptBox())) finalAnswer(true);
-    if (inside(p, finalRejectBox())) finalAnswer(false);
-  }
-}
-
-function juiceAction() {
-  if (game.phase !== "ratio") return;
-  const width = ratioWidth();
-  const min = 0.5 - width / 2;
-  const max = 0.5 + width / 2;
-  if (game.ratio >= min && game.ratio <= max) {
-    game.phase = "final";
-    game.phaseTime = 0;
-    game.workerLine = "نسبة وتناسب تحتاج ثقة، مش ذاكرة.";
-    floatText("balanced.", W / 2, 330, COLORS.green);
-    burst(W / 2, 330, 20);
-    cue("balanced");
-  } else {
-    game.mistakes += 1;
-    game.phase = "final";
-    game.phaseTime = 0;
-    game.workerLine = "المشروب عاش... بالعافية.";
-    floatText("drink survived, barely.", W / 2, 330, COLORS.gold);
-    shake();
-  }
-}
-
-function answerStatement(answer) {
-  const statement = game.statements[game.statementIndex];
-  if (!statement) return;
-  if (answer === statement.truth) {
-    game.cup = Math.min(1, game.cup + 0.18);
-    floatText("caught it", W / 2, 236, COLORS.green);
-    burst(W / 2, 236, 8);
-    cue("correct");
-  } else {
-    game.mistakes += 1;
-    hurt("he sounded confident", 1);
-  }
-  game.statementIndex += 1;
-  game.statementTimer = 7;
-  if (game.statementIndex >= game.statements.length) {
-    game.phase = "build";
-    game.phaseTime = 0;
-    game.workerLine = "برتقال؟ يمكن… بس الرمان أكيد.";
-    setHint("Build the first three from memory. Berry comes later.");
-  }
-}
-
-function missStatement() {
-  game.mistakes += 1;
-  hurt("too slow", 1);
-  game.statementIndex += 1;
-  game.statementTimer = 7;
-  if (game.statementIndex >= game.statements.length) {
-    game.phase = "build";
-    game.phaseTime = 0;
-    game.workerLine = "برتقال؟ يمكن… بس الرمان أكيد.";
-    setHint("Build the first three from memory. Berry comes later.");
-  }
-}
-
-function chooseJuiceFruit(name, x, y) {
-  const expected = game.recipe[game.selected.length];
-  if (name === "lemonMint") {
-    game.workerLine = "ليمون نعناع؟ لا لا… يمكن؟";
-    hurt("tempting, wrong order", 1);
-    return;
-  }
-  if (name === expected && game.selected.length < game.buildGoal) {
-    game.selected.push(name);
-    game.cup = Math.min(1, game.cup + 0.2);
-    game.workerLine = randomWorkerLine();
-    floatText(FRUIT[name].label, x, y - 50, COLORS.green);
-    burst(x, y, 10);
-    cue("correct");
-    if (game.selected.length >= game.buildGoal) {
-      game.phase = "ratio";
-      game.phaseTime = 0;
-      setHint("Stop the balance meter inside the sweet zone.");
-    }
-  } else {
-    game.mistakes += 1;
-    game.selected = [];
-    game.cup = Math.max(0, game.cup - 0.18);
-    hurt("order reset", 1);
-  }
-}
-
-function finalAnswer(accept) {
-  const item = game.finalQueue[game.finalIndex];
-  const correct = item === "berry";
-  if (accept && correct) {
-    game.selected.push("berry");
-    game.cup = 1;
-    burst(W / 2, 300, 28);
-    finishLevel("The cup finally made sense. Lemon mint stayed beloved, just not today.");
-    return;
-  }
-  if (!accept && !correct) {
-    floatText("good call", W / 2, 236, COLORS.green);
-    game.finalIndex += 1;
-    game.finalTimer = 1.9;
-    cue("correct");
-  } else {
-    game.mistakes += 1;
-    hurt(correct ? "you rejected berry" : "wrong add-on", 1);
-    game.finalIndex += 1;
-    game.finalTimer = 1.9;
-  }
-  if (game.finalIndex >= game.finalQueue.length && !game.selected.includes("berry")) {
-    setTimeout(() => startLevel(1), 760);
-  }
+function lineForFruit(fruit) {
+  if (fruit === "orange") return "والله يمكن برتقال.";
+  if (fruit === "grape" || fruit === "berry") return "توت؟ أو عنب؟ واحد منهم.";
+  if (fruit === "lemonMint") return "ليمون نعناع شئ.";
+  if (fruit === "mango") return "مانجو أكيد.";
+  return randomChoice(WORKER_LINES);
 }
 
 function updateJuice(dt) {
   game.phaseTime += dt;
-  game.workerTimer -= dt;
-  if (game.workerTimer <= 0 && game.phase !== "preview") {
-    game.workerLine = randomWorkerLine();
-    game.workerTimer = 2.6 + Math.random() * 1.8;
-  }
+  game.hurtCooldown = Math.max(0, game.hurtCooldown - dt);
+  game.workerBlink = Math.max(0, game.workerBlink - dt);
 
-  if (game.phase === "preview") {
-    game.phaseTime = Math.max(0, game.phaseTime);
-    setStatus(`MEMO ${Math.ceil(Math.max(0, 3 - game.phaseTime))}\n${heartText(game.hearts)}`);
-    if (game.phaseTime >= 3) {
-      game.phase = "statements";
+  if (game.phase === "flash") {
+    const remain = Math.ceil(Math.max(0, 5 - game.phaseTime));
+    setStatus(`receipt ${remain}\n${heartText(game.hearts)}`);
+    if (game.phaseTime >= 5) {
+      game.phase = "mix";
       game.phaseTime = 0;
-      setHint("True or false. Do not trust the worker voice.");
+      setHint("Watch the fruit, not his confidence. Tap only the lies.");
     }
-  } else if (game.phase === "statements") {
-    game.statementTimer -= dt;
-    setStatus(`LIE ${game.statementIndex + 1}/${game.statements.length}\n${heartText(game.hearts)}`);
-    if (game.statementTimer <= 0) missStatement();
-  } else if (game.phase === "build") {
-    setStatus(`ORDER ${game.selected.length}/3\n${heartText(game.hearts)}`);
-    if (!game.sneak && game.selected.includes("pomegranate") && Math.sin(clock * 1.4) > 0.985) {
-      game.sneak = true;
-      game.workerLine = "رمان مرة ثانية؟ خلاص أهم شي.";
-    }
-  } else if (game.phase === "ratio") {
-    game.ratio += game.ratioDir * dt * (0.7 + game.mistakes * 0.08);
-    if (game.ratio < 0 || game.ratio > 1) {
+    return;
+  }
+
+  if (game.phase === "mix") {
+    updateJuiceMix(dt);
+    setStatus(`mix ${game.accepted.length}/4\n${heartText(game.hearts)}`);
+    return;
+  }
+
+  if (game.phase === "ratio") {
+    game.ratioPos += game.ratioDir * game.ratioSpeed * dt;
+    if (game.ratioPos < 0 || game.ratioPos > 1) {
       game.ratioDir *= -1;
-      game.ratio = clamp(game.ratio, 0, 1);
+      game.ratioPos = clamp(game.ratioPos, 0, 1);
     }
-    setStatus(`BALANCE\n${heartText(game.hearts)}`);
-  } else if (game.phase === "final") {
-    game.finalTimer -= dt;
-    setStatus(`ADD-ON ${game.finalIndex + 1}/3\n${heartText(game.hearts)}`);
-    if (game.finalTimer <= 0) finalAnswer(false);
+    setStatus(`ratio\n${heartText(game.hearts)}`);
   }
 }
 
-function randomWorkerLine() {
-  const lines = [
-    "رمان صح؟ خلاص أهم شي.",
-    "برتقال؟ يمكن… بس الرمان أكيد.",
-    "أنا ما نسيت، أنا بس أختبركم.",
-    "ليمون نعناع؟ لا لا… يمكن؟",
-    "نسبة وتناسب تحتاج ثقة، مش ذاكرة."
-  ];
-  return lines[Math.floor(Math.random() * lines.length)];
+function updateJuiceMix(dt) {
+  if (!game.currentDrop) {
+    game.dropDelay -= dt;
+    if (game.dropDelay <= 0) spawnJuiceDrop();
+    return;
+  }
+
+  const drop = game.currentDrop;
+  if (drop.rejected) {
+    drop.x += drop.vx * dt;
+    drop.y += drop.vy * dt;
+    drop.vy += 520 * dt;
+    drop.spin += drop.spinSpeed * dt;
+    if (drop.y > H + 80 || drop.x < -80 || drop.x > W + 80) {
+      game.currentDrop = null;
+      game.dropDelay = 0.28;
+    }
+    return;
+  }
+
+  drop.y += drop.speed * dt;
+  drop.spin += drop.spinSpeed * dt;
+  if (drop.y >= 316) acceptOrSpillDrop();
 }
 
-function ratioWidth() {
-  return clamp(0.24 - game.mistakes * 0.035, 0.12, 0.24);
+function spawnJuiceDrop() {
+  if (!game.queue.length) {
+    const missing = game.recipe.filter((fruit) => !game.accepted.includes(fruit));
+    const fillers = shuffle(["lemonMint", "mango", "peach", "apple", "watermelon"]).slice(0, 2);
+    game.queue.push(...shuffle([...missing, ...fillers]).map((fruit) => ({ fruit, line: lineForFruit(fruit) })));
+  }
+  const next = game.queue.shift();
+  game.workerLine = next.line;
+  game.workerBlink = 0.12;
+  const lane = randomChoice([208, 320, 436, 552, 668]);
+  game.currentDrop = {
+    fruit: next.fruit,
+    x: lane + randRange(-22, 22),
+    y: -62,
+    size: 76,
+    speed: Math.min(282, 138 + game.dropsHandled * 17 + randRange(0, 28)),
+    revealY: randRange(94, 132),
+    spin: 0,
+    spinSpeed: randRange(-3, 3),
+    rejected: false,
+    vx: 0,
+    vy: 0
+  };
+}
+
+function neededFruit(fruit) {
+  return game.recipe.includes(fruit) && !game.accepted.includes(fruit);
+}
+
+function acceptOrSpillDrop() {
+  const drop = game.currentDrop;
+  const needed = neededFruit(drop.fruit);
+  game.dropsHandled += 1;
+  if (needed) {
+    game.accepted.push(drop.fruit);
+    game.blender.push(drop.fruit);
+    burst(480, 330, 14, FRUITS[drop.fruit].color);
+    floatText(FRUITS[drop.fruit].short, 480, 292, COLORS.green);
+    cue("fruit-good");
+  } else {
+    game.mistakes += 1;
+    game.muddy = clamp(game.muddy + 0.22, 0, 1);
+    game.blender.push("mud");
+    loseHeart(drop.fruit === "pomegranate" ? "too much pomegranate" : "wrong splash");
+  }
+  game.currentDrop = null;
+  game.dropDelay = 0.34;
+  if (game.accepted.length >= 4 && game.hearts > 0) {
+    game.phase = "ratio";
+    game.phaseTime = 0;
+    game.workerLine = "نسبة وتناسب تحتاج ثقة.";
+    setHint("Stop the marker inside نسبة وتناسب.");
+  }
+}
+
+function juicePointerDown(p) {
+  if (game.phase === "mix" && game.currentDrop && !game.currentDrop.rejected) {
+    const drop = game.currentDrop;
+    if (dist(p.x, p.y, drop.x, drop.y) < drop.size * 0.62) rejectJuiceDrop();
+  }
+  if (game.phase === "ratio") stopJuiceRatio();
+}
+
+function rejectJuiceDrop() {
+  const drop = game.currentDrop;
+  const needed = neededFruit(drop.fruit);
+  drop.rejected = true;
+  drop.vx = drop.x < W / 2 ? -260 : 260;
+  drop.vy = -260;
+  game.dropsHandled += 1;
+  if (needed) {
+    game.mistakes += 1;
+    game.queue.splice(Math.floor(rand() * (game.queue.length + 1)), 0, { fruit: drop.fruit, line: lineForFruit(drop.fruit) });
+    loseHeart("rejected truth");
+  } else {
+    floatText("caught it", drop.x, drop.y - 20, COLORS.green);
+    burst(drop.x, drop.y, 10, COLORS.teal);
+    cue("fruit-reject");
+  }
+}
+
+function stopJuiceRatio() {
+  if (!game || currentLevel !== 1 || game.phase !== "ratio" || game.ratioDone) return;
+  game.ratioDone = true;
+  const zone = juiceRatioZone();
+  const distance = Math.abs(game.ratioPos - zone.center);
+  if (distance <= zone.width * 0.28) {
+    burst(W / 2, 356, 34, COLORS.green);
+    finishLevel("He still asked about pomegranate, but the cup came out perfectly yours.");
+  } else if (distance <= zone.width / 2) {
+    burst(W / 2, 356, 22, COLORS.gold);
+    finishLevel("Balanced enough. Somehow even his pomegranate obsession helped.");
+  } else {
+    game.muddy = clamp(game.muddy + 0.2, 0, 1);
+    shake();
+    finishLevel("The ratio limped across the line. He nodded like pomegranate did all the work.");
+  }
+}
+
+function juiceRatioZone() {
+  return {
+    center: game.ratioCenter,
+    width: clamp(0.17 - game.mistakes * 0.032, 0.075, 0.17)
+  };
 }
 
 function drawJuice() {
-  drawJuiceBeach();
-  drawJuicePalace();
-  drawCup(728, 222, game.cup);
-  if (game.phase === "preview") drawRecipePreview();
-  if (game.phase === "statements") drawStatementChallenge();
-  if (game.phase === "build") drawBuildFruit();
-  if (game.phase === "ratio") drawRatioMeter();
-  if (game.phase === "final") drawFinalAddOn();
-  drawHearts(818, 28, game.hearts);
+  drawJuiceScene();
+  drawJuiceWorker();
+  drawJuiceBlender();
+  if (game.phase === "flash") drawJuiceReceipt();
+  if (game.phase === "mix") drawJuiceDrop();
+  if (game.phase === "ratio") drawJuiceRatio();
+  drawJuiceHud();
+  drawHearts(812, 28, game.hearts);
   drawEffects();
 }
 
-function drawJuiceBeach() {
-  const sky = ctx.createLinearGradient(0, 0, 0, 280);
-  sky.addColorStop(0, "#17345f");
-  sky.addColorStop(0.55, "#db6d50");
-  sky.addColorStop(1, "#f4b067");
+function drawJuiceScene() {
+  const sky = ctx.createLinearGradient(0, 0, 0, H);
+  sky.addColorStop(0, "#160b24");
+  sky.addColorStop(0.55, "#24172c");
+  sky.addColorStop(1, "#0c1020");
   ctx.fillStyle = sky;
-  ctx.fillRect(0, 0, W, 280);
-  circle(820, 82, 36, COLORS.gold);
-  ctx.fillStyle = "#1292ad";
-  ctx.fillRect(0, 218, W, 166);
-  drawWave(250, "rgba(255,255,255,.25)");
-  drawWave(298, "rgba(255,255,255,.18)");
-  ctx.fillStyle = "#d8ad62";
-  ctx.fillRect(0, 382, W, 158);
+  ctx.fillRect(0, 0, W, H);
+  drawImageCover("juiceLogo", 66, 42, 308, 136);
+  ctx.fillStyle = "rgba(5,5,13,.58)";
+  ctx.fillRect(62, 38, 316, 144);
+  drawImageCover("juiceLogo", 74, 48, 292, 124);
+  ctx.fillStyle = "rgba(255,211,107,.16)";
+  for (let i = 0; i < 11; i += 1) ctx.fillRect(420 + i * 42, 82 + Math.sin(clock + i) * 4, 22, 52);
+  ctx.fillStyle = "#211629";
+  ctx.fillRect(0, 365, W, 175);
+  drawImageCover("leopard", 0, 365, W, 54);
+  ctx.fillStyle = "rgba(5,5,13,.42)";
+  ctx.fillRect(0, 365, W, 54);
+  ctx.fillStyle = "#110c18";
+  ctx.fillRect(0, 420, W, 120);
+  drawPixelPanel(42, 206, 246, 132, "juice palace");
+  ctx.fillStyle = COLORS.cream;
+  ctx.font = "bold 12px Courier New";
+  ctx.fillText("order: نسبة وتناسب", 64, 248);
+  ctx.fillText("reject the lies before the blender", 64, 274);
 }
 
-function drawJuicePalace() {
-  ctx.fillStyle = "#124e5f";
-  ctx.fillRect(52, 126, 404, 194);
-  ctx.fillStyle = "#0d3441";
-  ctx.fillRect(76, 162, 350, 142);
-  ctx.fillStyle = COLORS.coral;
-  ctx.fillRect(52, 126, 404, 24);
+function drawJuiceWorker() {
+  const bob = Math.sin(clock * 2.1) * 4;
+  if (!drawImageContain("egyptian", 628, 104 + bob, 172, 266)) {
+    drawPerson(710, 266 + bob, COLORS.gold, COLORS.rose);
+  }
+  drawSpeechBubble(554, 46, 330, 76, game.workerLine);
+}
+
+function drawJuiceBlender() {
+  ctx.fillStyle = "rgba(255,240,210,.11)";
+  ctx.fillRect(414, 270, 132, 110);
+  ctx.strokeStyle = COLORS.cream;
+  ctx.lineWidth = 3;
+  ctx.strokeRect(414, 270, 132, 110);
+  ctx.fillStyle = "#29324a";
+  ctx.fillRect(432, 382, 96, 24);
+  ctx.fillStyle = "#10131d";
+  ctx.fillRect(448, 406, 64, 26);
+  const liquidH = 92 * clamp(game.accepted.length / 4, 0, 1);
+  if (liquidH > 0 || game.muddy > 0) {
+    const grad = ctx.createLinearGradient(418, 374, 418, 276);
+    grad.addColorStop(0, mixColor("#7e4bd6", "#5b4031", game.muddy));
+    grad.addColorStop(0.45, mixColor("#f7942f", "#5b4031", game.muddy));
+    grad.addColorStop(1, mixColor("#c63f5c", "#5b4031", game.muddy));
+    ctx.fillStyle = grad;
+    ctx.fillRect(420, 374 - liquidH, 120, liquidH);
+  }
   ctx.fillStyle = COLORS.gold;
-  for (let i = 0; i < 20; i += 1) triangle(52 + i * 20, 126, 62 + i * 20, 150, 72 + i * 20, 126);
-  ctx.fillStyle = "#7d1f3a";
-  ctx.fillRect(104, 230, 276, 52);
+  ctx.font = "bold 11px Courier New";
+  center(`${game.accepted.length}/4`, 480, 404);
+}
+
+function drawJuiceReceipt() {
+  ctx.fillStyle = "rgba(255,246,220,.96)";
+  ctx.fillRect(330, 96, 300, 250);
   ctx.strokeStyle = COLORS.gold;
-  ctx.strokeRect(104, 230, 276, 52);
-  drawAsset("logo", 118, 238, 248, 36, "contain");
-  drawAsset("egyptian", 378, 192, 108, 140, "contain");
-  drawBubble(474, 76, 284, 62, game.workerLine);
-}
-
-function drawRecipePreview() {
-  drawPanel(502, 338, 382, 112, game.recipeName);
-  game.recipe.forEach((name, index) => {
-    const x = 534 + index * 84;
-    ctx.fillStyle = "rgba(255,241,214,.1)";
-    ctx.fillRect(x, 376, 64, 42);
-    ctx.strokeStyle = "rgba(255,241,214,.28)";
-    ctx.strokeRect(x, 376, 64, 42);
-    drawFruit(name, x + 32, 392, 0.7);
-    ctx.fillStyle = COLORS.cream;
-    ctx.font = "bold 10px Trebuchet MS";
-    center(FRUIT[name].label, x + 32, 437);
+  ctx.lineWidth = 3;
+  ctx.strokeRect(330, 96, 300, 250);
+  ctx.fillStyle = COLORS.plum;
+  ctx.font = "bold 24px Courier New";
+  center("نسبة وتناسب", 480, 138);
+  game.receiptOrder.forEach((fruit, index) => {
+    drawFruit(fruit, 382, 178 + index * 38, 0.7);
+    ctx.fillStyle = COLORS.plum;
+    ctx.font = "bold 16px Courier New";
+    ctx.fillText(`${index + 1}. ${FRUITS[fruit].label}`, 420, 184 + index * 38);
   });
-}
-
-function drawStatementChallenge() {
-  const statement = game.statements[game.statementIndex];
-  drawPanel(498, 338, 388, 148, "catch the lie");
+  ctx.fillStyle = "rgba(39,22,45,.72)";
+  ctx.fillRect(358, 304, 244, 20);
   ctx.fillStyle = COLORS.cream;
-  ctx.font = "bold 17px Trebuchet MS";
-  wrapText(statement ? statement.text : "", 526, 384, 330, 22);
-  drawChoiceButton(trueBox(), "TRUE", COLORS.green);
-  drawChoiceButton(falseBox(), "FALSE", COLORS.danger);
-  drawTimerBar(526, 462, 318, 10, game.statementTimer / 7, COLORS.gold);
+  ctx.font = "bold 11px Courier New";
+  center("memorize it, then it disappears", 480, 318);
 }
 
-function drawBuildFruit() {
-  game.fruit.forEach((box) => {
-    const picked = game.selected.includes(box.name);
-    ctx.fillStyle = picked ? "rgba(124,255,155,.18)" : "rgba(8,7,18,.58)";
-    ctx.fillRect(box.x - box.w / 2, box.y - box.h / 2, box.w, box.h);
-    ctx.strokeStyle = picked ? COLORS.green : box.name === "lemonMint" ? COLORS.gold : "rgba(255,241,214,.32)";
-    ctx.lineWidth = picked ? 3 : 2;
-    ctx.strokeRect(box.x - box.w / 2, box.y - box.h / 2, box.w, box.h);
-    drawFruit(box.name, box.x, box.y - 7, 0.8);
+function drawJuiceDrop() {
+  if (!game.currentDrop) return;
+  const d = game.currentDrop;
+  ctx.save();
+  ctx.translate(d.x, d.y);
+  ctx.rotate(d.spin);
+  if (d.y < d.revealY) {
+    ctx.fillStyle = "rgba(255,240,210,.88)";
+    ctx.fillRect(-34, -28, 68, 56);
+    ctx.strokeStyle = COLORS.gold;
+    ctx.strokeRect(-34, -28, 68, 56);
+    ctx.fillStyle = COLORS.plum;
+    ctx.font = "bold 18px Courier New";
+    center("؟", 0, 8);
+  } else {
+    drawFruit(d.fruit, 0, 0, 1.15);
+  }
+  ctx.restore();
+  if (d.y < d.revealY) {
+    ctx.fillStyle = "rgba(5,5,13,.76)";
+    ctx.fillRect(d.x - 58, d.y + 36, 116, 22);
+    ctx.strokeStyle = "rgba(255,211,107,.38)";
+    ctx.strokeRect(d.x - 58, d.y + 36, 116, 22);
     ctx.fillStyle = COLORS.cream;
-    ctx.font = "bold 10px Trebuchet MS";
-    center(FRUIT[box.name].label, box.x, box.y + 30);
-  });
-
-  drawPanel(512, 150, 210, 82, "remembered");
-  game.selected.forEach((name, index) => drawFruit(name, 548 + index * 46, 198, 0.55));
-  if (game.sneak) drawSneakPrompt();
+    ctx.font = "bold 10px Courier New";
+    center("listen first", d.x, d.y + 51);
+  }
 }
 
-function drawSneakPrompt() {
-  drawPanel(620, 118, 250, 112, "worker tries it");
-  ctx.fillStyle = COLORS.cream;
-  ctx.font = "bold 15px Trebuchet MS";
-  center("pomegranate again?", 745, 158);
-  drawChoiceButton(acceptBox(), "ACCEPT", COLORS.green);
-  drawChoiceButton(rejectBox(), "REJECT", COLORS.danger);
-}
-
-function drawRatioMeter() {
-  drawRecipePreview();
-  drawPanel(302, 340, 356, 114, "balance meter");
-  ctx.fillStyle = "rgba(0,0,0,.48)";
-  ctx.fillRect(348, 386, 264, 20);
-  const width = ratioWidth();
-  ctx.fillStyle = "rgba(124,255,155,.76)";
-  ctx.fillRect(348 + 264 * (0.5 - width / 2), 386, 264 * width, 20);
+function drawJuiceRatio() {
+  const bar = { x: 242, y: 130, w: 476, h: 34 };
+  const zone = juiceRatioZone();
+  drawPixelPanel(212, 96, 536, 112, "ratio lock");
+  ctx.fillStyle = "rgba(0,0,0,.55)";
+  ctx.fillRect(bar.x, bar.y, bar.w, bar.h);
+  ctx.strokeStyle = COLORS.cream;
+  ctx.strokeRect(bar.x, bar.y, bar.w, bar.h);
+  ctx.fillStyle = "rgba(124,255,155,.32)";
+  ctx.fillRect(bar.x + bar.w * (zone.center - zone.width / 2), bar.y, bar.w * zone.width, bar.h);
+  ctx.strokeStyle = COLORS.green;
+  ctx.strokeRect(bar.x + bar.w * (zone.center - zone.width / 2), bar.y, bar.w * zone.width, bar.h);
   ctx.fillStyle = COLORS.gold;
-  ctx.fillRect(348 + 264 * game.ratio - 5, 377, 10, 38);
+  ctx.fillRect(bar.x + bar.w * game.ratioPos - 4, bar.y - 10, 8, bar.h + 20);
   ctx.fillStyle = COLORS.cream;
-  ctx.font = "bold 13px Trebuchet MS";
-  center("click / space when balanced", 480, 434);
+  ctx.font = "bold 14px Courier New";
+  center("نسبة وتناسب", W / 2, 191);
 }
 
-function drawFinalAddOn() {
-  const item = game.finalQueue[game.finalIndex] || "berry";
-  drawPanel(520, 332, 350, 152, "final add-on");
+function drawJuiceHud() {
+  drawPixelPanel(34, 28, 174, 82, "digicam");
   ctx.fillStyle = COLORS.cream;
-  ctx.font = "bold 16px Trebuchet MS";
-  center(`Add ${FRUIT[item].label}?`, 695, 376);
-  drawFruit(item, 695, 418, 0.9);
-  drawChoiceButton(finalAcceptBox(), "ACCEPT", COLORS.green);
-  drawChoiceButton(finalRejectBox(), "REJECT", COLORS.danger);
-  drawTimerBar(556, 466, 278, 10, game.finalTimer / 1.9, COLORS.gold);
+  ctx.font = "bold 11px Courier New";
+  ctx.fillText(`mistakes ${game.mistakes}`, 58, 78);
 }
 
-/* LEVEL 02: ROUTE, SEQUENCE, REACTION, DEDUCTION */
+/* LEVEL 02: RAV4 ROAD REUNION */
 
-function setupMountain() {
-  gameTitle.textContent = "02";
-  setHint("Park Jojo. Build the setup. Protect the vibe.");
-  const cards = makeDeductionCards();
+function setupRoad() {
+  dom.title.textContent = "02";
+  setHint("Park close. Build smart. Hold the vibe.");
   game = {
-    phase: "park",
+    id: "road",
+    phase: "drive",
     hearts: 3,
-    vibe: 100,
-    route: [],
-    drawingRoute: false,
-    jojo: { x: 106, y: 423 },
-    rav4: { x: 286, y: 424 },
-    parkTarget: { x: 214, y: 422, r: 28 },
-    obstacles: [
-      { x: 174, y: 356, r: 28, label: "rock" },
-      { x: 368, y: 382, r: 32, label: "palm" },
-      { x: 462, y: 454, r: 26, label: "rock" }
-    ],
-    setupOrder: ["chairs", "drinks", "fries", "steak", "digicam", "cards"],
-    setupIndex: 0,
-    wind: null,
-    windClock: 5,
-    items: [
-      setupItem("chairs", 198, 338, 102, 58),
-      setupItem("drinks", 324, 350, 88, 54),
-      setupItem("fries", 438, 350, 88, 54),
-      setupItem("steak", 552, 350, 92, 54),
-      setupItem("digicam", 676, 348, 98, 58),
-      setupItem("cards", 806, 350, 88, 54)
-    ],
-    photo: { x: 260, y: 216, vx: 1, vy: 1, tries: 3, score: 0 },
-    cards,
-    flips: 5,
-    foundQueen: false,
-    foundKing: false
+    hurtCooldown: 0,
+    distance: 1350,
+    maxDistance: 1350,
+    timer: 50,
+    roadScroll: 0,
+    player: { x: 480, y: 444, targetX: 480, w: 62, h: 96, boost: 0, slow: 0, invuln: 0 },
+    cards: [],
+    traffic: [],
+    cardTimer: 0.2,
+    trafficTimer: 1.0,
+    noCardTime: 0,
+    streak: 0,
+    driftShield: false,
+    lastSpecial: null,
+    specialClock: 0,
+    patrol: { active: false, cooldown: 1.25, x: -120, y: 392, nextY: randRange(334, 420), dir: 1, speed: 280, t: randRange(0, 6) },
+    winAnim: 0
   };
 }
 
-function setupItem(id, x, y, w, h) {
-  return { id, x, y, w, h, placed: false };
+function updateRoad(dt) {
+  game.hurtCooldown = Math.max(0, game.hurtCooldown - dt);
+  if (game.phase === "park") {
+    game.winAnim += dt;
+    setStatus(`parked\n${heartText(game.hearts)}`);
+    if (game.winAnim > 2.4) finishLevel("Jojo stayed. The RAV4 found the spot beside it.");
+    return;
+  }
+
+  moveRoadPlayer(dt);
+  const progress = 1 - clamp(game.distance / game.maxDistance, 0, 1);
+  const roadSpeed = 158 + progress * 72 + (game.player.boost > 0 ? 66 : 0) - (game.player.slow > 0 ? 56 : 0);
+  const travel = 78 + progress * 28 + (game.player.boost > 0 ? 46 : 0) - (game.player.slow > 0 ? 34 : 0);
+  game.distance -= Math.max(42, travel) * dt;
+  game.timer -= dt;
+  game.roadScroll = (game.roadScroll + roadSpeed * dt) % 80;
+  game.player.boost = Math.max(0, game.player.boost - dt);
+  game.player.slow = Math.max(0, game.player.slow - dt);
+  game.player.invuln = Math.max(0, game.player.invuln - dt);
+  game.noCardTime += dt;
+  game.specialClock += dt;
+
+  updateRoadSpawns(dt, roadSpeed);
+  updatePatrolCar(dt, progress);
+  updateRoadCollisions();
+  updateJojoDrift();
+
+  if (game.timer <= 0) {
+    game.timer = 16;
+    game.distance = Math.min(game.maxDistance + 120, game.distance + 72);
+    game.streak = 0;
+    floatText("Jojo drifted", W / 2, 112, COLORS.gold);
+    shake();
+  }
+
+  if (game.distance <= 0 && game.hearts > 0) {
+    game.phase = "park";
+    game.winAnim = 0;
+    burst(480, 270, 34, COLORS.rose);
+    cue("parked");
+  }
+
+  setStatus(`distance ${Math.ceil(Math.max(0, game.distance))}\ntime ${Math.ceil(game.timer)} · ${heartText(game.hearts)}`);
 }
 
-function makeDeductionCards() {
-  const labels = ["fries", "Q♥", "cam", "RAV4", "steak", "Jojo", "K♠", "cards"];
-  return labels.map((label, index) => ({
+function moveRoadPlayer(dt) {
+  let steer = 0;
+  if (keys.has("arrowleft") || keys.has("a")) steer -= 1;
+  if (keys.has("arrowright") || keys.has("d")) steer += 1;
+  if (steer) game.player.targetX = clamp(game.player.x + steer * 430 * dt, 278, 682);
+  game.player.x = lerp(game.player.x, game.player.targetX, 1 - Math.pow(0.001, dt));
+}
+
+function roadPointerDown(p) {
+  pointer.down = true;
+  game.player.targetX = clamp(p.x, 278, 682);
+}
+
+function roadPointerMove(p) {
+  if (pointer.down) game.player.targetX = clamp(p.x, 278, 682);
+}
+
+function roadPointerUp() {
+  pointer.down = false;
+}
+
+function updateRoadSpawns(dt, roadSpeed) {
+  game.cardTimer -= dt;
+  game.trafficTimer -= dt;
+  if (game.cardTimer <= 0) {
+    spawnRoadCard();
+    game.cardTimer = randRange(0.48, 0.86);
+  }
+  if (game.trafficTimer <= 0) {
+    spawnTraffic();
+    game.trafficTimer = randRange(1.35, 2.05);
+  }
+  game.cards.forEach((card) => { card.y += roadSpeed * dt; card.wobble += dt; });
+  game.traffic.forEach((car) => { car.y += roadSpeed * dt; });
+  game.cards = game.cards.filter((card) => card.y < H + 80);
+  game.traffic = game.traffic.filter((car) => car.y < H + 110);
+}
+
+function spawnRoadCard() {
+  const roll = rand();
+  let label = randomChoice(["7♣", "9♦", "A♣", "4♦", "10♣"]);
+  let special = false;
+  if (roll > 0.72) {
+    label = maybe(0.5) ? "Q♥" : "K♠";
+    special = true;
+  }
+  const lanes = [304, 392, 480, 568, 656];
+  game.cards.push({
     label,
-    open: false,
-    solved: false,
-    x: 252 + (index % 4) * 110,
-    y: 268 + Math.floor(index / 4) * 78,
-    w: 76,
-    h: 58
-  }));
+    special,
+    x: randomChoice(lanes) + randRange(-12, 12),
+    y: -44,
+    w: 42,
+    h: 58,
+    wobble: randRange(0, 6)
+  });
 }
 
-function mountainPointerDown(p) {
-  if (game.phase === "park") {
-    game.drawingRoute = true;
-    game.route = [{ x: game.jojo.x, y: game.jojo.y }, p];
-    return;
-  }
-
-  if (game.phase === "setup") {
-    if (game.wind && inside(p, game.wind.box)) {
-      floatText("stabilized", game.wind.box.x + 40, game.wind.box.y - 12, COLORS.green);
-      game.wind = null;
-      game.vibe = Math.min(100, game.vibe + 8);
-      cue("correct");
-      return;
-    }
-    const hit = game.items.find((item) => inside(p, item));
-    if (hit) chooseSetupItem(hit);
-    return;
-  }
-
-  if (game.phase === "photo") {
-    mountainAction();
-    return;
-  }
-
-  if (game.phase === "cards") {
-    const card = game.cards.find((c) => inside(p, c) && !c.solved && !c.open);
-    if (card) flipDeductionCard(card);
-  }
+function spawnTraffic() {
+  const lanes = [304, 392, 480, 568, 656];
+  game.traffic.push({
+    x: randomChoice(lanes) + randRange(-10, 10),
+    y: -96,
+    w: 50,
+    h: 76,
+    color: randomChoice(["#384155", "#6a3147", "#2a5c60", "#775c31"])
+  });
 }
 
-function mountainPointerMove(p) {
-  if (game.phase === "park" && game.drawingRoute) {
-    const last = game.route[game.route.length - 1];
-    if (!last || dist(last.x, last.y, p.x, p.y) > 8) game.route.push({ x: p.x, y: p.y });
-  }
-}
-
-function mountainPointerUp(p) {
-  if (game.phase === "park" && game.drawingRoute) {
-    game.drawingRoute = false;
-    if (game.route.length > 1) game.route.push(p);
-    validateParkingRoute();
-  }
-}
-
-function mountainAction() {
-  if (game.phase !== "photo") return;
-  const frame = photoFrame();
-  const target = photoTarget();
-  const dx = Math.abs((frame.x + frame.w / 2) - (target.x + target.w / 2));
-  const dy = Math.abs((frame.y + frame.h / 2) - (target.y + target.h / 2));
-  if (dx < 34 && dy < 26) {
-    game.photo.score += 1;
-    game.phase = "cards";
-    setHint("Use the clues. Find Q♥ and K♠ before flips run out.");
-    burst(W / 2, 260, 16);
-    cue("photo");
-  } else {
-    game.photo.tries -= 1;
-    hurt("blurry frame", 0);
-    if (game.photo.tries <= 0) hurt("memory missed", 1);
-  }
-}
-
-function validateParkingRoute() {
-  const end = game.route[game.route.length - 1];
-  const reached = dist(end.x, end.y, game.parkTarget.x, game.parkTarget.y) < game.parkTarget.r + 18;
-  const collision = game.route.some((p) => game.obstacles.some((o) => dist(p.x, p.y, o.x, o.y) < o.r));
-  const tooLong = routeLength(game.route) > 520;
-  if (reached && !collision && !tooLong) {
-    game.jojo.x = game.parkTarget.x;
-    game.jojo.y = game.parkTarget.y;
-    game.phase = "setup";
-    game.route = [];
-    setHint("Place: chairs, drinks, fries, steak, digicam, cards.");
-    burst((game.jojo.x + game.rav4.x) / 2, game.jojo.y - 36, 22);
-    cue("park");
-  } else {
-    game.route = [];
-    game.vibe = Math.max(0, game.vibe - 12);
-    hurt(collision ? "route hit obstacle" : tooLong ? "route wandered" : "park closer", 0);
-  }
-}
-
-function chooseSetupItem(item) {
-  const expected = game.setupOrder[game.setupIndex];
-  if (item.id === expected) {
-    item.placed = true;
-    game.setupIndex += 1;
-    floatText(setupLine(item.id), item.x + item.w / 2, item.y - 10, COLORS.gold);
-    cue("place");
-    if (game.setupIndex >= game.setupOrder.length) {
-      game.phase = "photo";
-      setHint("Frame chairs + mountain + antenna.");
-    } else {
-      maybeStartWind(item);
+function updatePatrolCar(dt, progress) {
+  const patrol = game.patrol;
+  patrol.t += dt;
+  if (!patrol.active) {
+    patrol.cooldown -= dt;
+    if (patrol.cooldown <= 0) {
+      patrol.active = true;
+      patrol.y = patrol.nextY;
+      patrol.dir = maybe(0.5) ? 1 : -1;
+      patrol.x = patrol.dir > 0 ? 172 : 788;
+      patrol.speed = 250 + progress * 120 + randRange(0, 32);
     }
     return;
   }
-
-  const message = item.id === "drinks" ? "drinks too early" :
-    item.id === "cards" ? "cards scatter" :
-    item.id === "fries" || item.id === "steak" ? "food timing slipped" :
-    "wrong setup beat";
-  game.vibe = Math.max(0, game.vibe - 14);
-  hurt(message, 0);
-  if (game.vibe <= 0) hurt("vibe gone", 1);
-}
-
-function maybeStartWind(item) {
-  if (Math.random() < 0.75 || item.id === "cards") {
-    game.wind = {
-      box: { x: item.x - 6, y: item.y - 8, w: item.w + 12, h: item.h + 16 },
-      t: 2.25
-    };
-    setHint("Gust. Stabilize the shaking item.");
+  patrol.x += patrol.dir * patrol.speed * dt;
+  if ((patrol.dir > 0 && patrol.x > 800) || (patrol.dir < 0 && patrol.x < 160)) {
+    patrol.active = false;
+    patrol.cooldown = randRange(1.8, 3.0 - progress * 0.5);
+    patrol.nextY = randRange(334, 420);
   }
 }
 
-function flipDeductionCard(card) {
-  if (game.flips <= 0) return;
-  card.open = true;
-  game.flips -= 1;
-  if (card.label === "Q♥") {
-    game.foundQueen = true;
-    card.solved = true;
-    cue("correct");
-  } else if (card.label === "K♠") {
-    game.foundKing = true;
-    card.solved = true;
-    cue("correct");
-  } else {
-    setTimeout(() => { card.open = false; }, 640);
-  }
-  if (game.foundQueen && game.foundKing) {
-    finishLevel("Jojo stayed close, the setup held, and the cards knew who they were hiding.");
-  } else if (game.flips <= 0) {
-    hurt("out of flips", 1);
-    setTimeout(() => startLevel(2), 760);
-  }
-}
-
-function updateMountain(dt) {
-  if (game.phase === "park") {
-    setStatus(`ROUTE\n${heartText(game.hearts)}`);
-  }
-
-  if (game.phase === "setup") {
-    game.windClock -= dt;
-    if (game.wind) {
-      game.wind.t -= dt;
-      if (game.wind.t <= 0) {
-        game.wind = null;
-        game.vibe = Math.max(0, game.vibe - 16);
-        hurt("gust won", 0);
-      }
-    } else if (game.windClock <= 0 && game.setupIndex > 0) {
-      const placed = game.items.filter((i) => i.placed);
-      if (placed.length) maybeStartWind(placed[Math.floor(Math.random() * placed.length)]);
-      game.windClock = 5.5;
+function updateRoadCollisions() {
+  const playerBox = { x: game.player.x - 25, y: game.player.y - 42, w: 50, h: 84 };
+  game.cards.forEach((card) => {
+    if (card.collected) return;
+    if (rectsOverlap(playerBox, { x: card.x - 20, y: card.y - 28, w: 40, h: 56 })) collectRoadCard(card);
+  });
+  game.traffic.forEach((car) => {
+    if (car.hit) return;
+    if (rectsOverlap(playerBox, { x: car.x - car.w / 2, y: car.y - car.h / 2, w: car.w, h: car.h })) {
+      car.hit = true;
+      game.player.slow = 1.5;
+      game.streak = 0;
+      floatText("slow", game.player.x, game.player.y - 70, COLORS.gold);
+      cue("slow");
     }
-    setStatus(`SETUP ${game.setupIndex}/6\nVIBE ${Math.ceil(game.vibe)}`);
+  });
+  const patrol = roadPatrolBox();
+  if (game.player.invuln <= 0 && rectsOverlap(playerBox, patrol)) {
+    game.player.invuln = 1.4;
+    game.player.slow = 3;
+    game.streak = 0;
+    loseHeart("patrol clipped you");
   }
+  game.cards = game.cards.filter((card) => !card.collected);
+}
 
-  if (game.phase === "photo") {
-    game.photo.x += game.photo.vx * dt * 86;
-    game.photo.y += game.photo.vy * dt * 42;
-    if (game.photo.x < 224 || game.photo.x > 420) game.photo.vx *= -1;
-    if (game.photo.y < 178 || game.photo.y > 262) game.photo.vy *= -1;
-    setStatus(`FRAME\n${game.photo.tries} tries`);
+function collectRoadCard(card) {
+  card.collected = true;
+  game.timer = Math.min(55, game.timer + (card.special ? 2.4 : 1.8));
+  game.distance = Math.max(0, game.distance - (card.special ? 92 : 44));
+  game.player.boost = card.special ? 2.4 : 1.9;
+  game.noCardTime = 0;
+  game.streak += 1;
+  if (game.streak >= 3) game.driftShield = true;
+  burst(card.x, card.y, card.special ? 20 : 10, card.special ? COLORS.rose : COLORS.gold);
+  floatText(card.special ? "+2.4s" : "+1.8s", card.x, card.y - 20, COLORS.green);
+  cue("card");
+  if (card.special) {
+    if (game.lastSpecial && game.lastSpecial !== card.label && game.specialClock < 4.5) {
+      burst(W / 2, 180, 34, COLORS.rose);
+      floatText("Q + K", W / 2, 160, COLORS.rose);
+    }
+    game.lastSpecial = card.label;
+    game.specialClock = 0;
   }
+}
 
-  if (game.phase === "cards") {
-    setStatus(`FLIPS ${game.flips}\n${game.foundQueen ? "Q✓" : "Q?"} ${game.foundKing ? "K✓" : "K?"}`);
+function updateJojoDrift() {
+  if (game.noCardTime < 13) return;
+  game.noCardTime = 0;
+  if (game.driftShield) {
+    game.driftShield = false;
+    floatText("Jojo waited", W / 2, 112, COLORS.green);
+    burst(480, 96, 16, COLORS.rose);
+  } else {
+    game.distance = Math.min(game.maxDistance + 140, game.distance + 78);
+    floatText("Jojo rolled forward", W / 2, 112, COLORS.gold);
   }
+  game.streak = 0;
 }
 
-function setupLine(id) {
-  return {
-    chairs: "anchor first",
-    drinks: "weighted",
-    fries: "still hot",
-    steak: "priority",
-    digicam: "ready",
-    cards: "last, safe"
-  }[id];
+function roadPatrolBox() {
+  if (!game.patrol.active) return { x: -999, y: -999, w: 0, h: 0 };
+  return { x: game.patrol.x - 38, y: game.patrol.y - 24, w: 76, h: 48 };
 }
 
-function photoFrame() {
-  return { x: game.photo.x, y: game.photo.y, w: 250, h: 138 };
-}
-
-function photoTarget() {
-  return { x: 314, y: 202, w: 246, h: 136 };
-}
-
-function drawMountain() {
-  drawAsset("mountain", 0, 0, W, H, "cover");
-  ctx.fillStyle = "rgba(8,7,18,.22)";
-  ctx.fillRect(0, 0, W, H);
-  drawMountainGround();
-  if (game.phase === "park") drawParkingPuzzle();
-  if (game.phase === "setup") drawSetupPuzzle();
-  if (game.phase === "photo") drawMountainPhoto();
-  if (game.phase === "cards") drawDeductionCards();
-  drawHearts(818, 28, game.hearts);
+function drawRoad() {
+  drawRoadScene();
+  if (game.phase === "park") drawRoadParkWin();
+  else drawRoadObjects();
+  drawRoadHud();
+  drawHearts(812, 28, game.hearts);
   drawEffects();
 }
 
-function drawMountainGround() {
-  ctx.fillStyle = "rgba(25, 16, 9, .36)";
-  ctx.fillRect(0, 404, W, 136);
-  drawAsset("rav4", game.rav4.x - 48, game.rav4.y - 34, 96, 68, "contain");
-  drawAsset("jojo", game.jojo.x - 44, game.jojo.y - 34, 88, 68, "contain");
-  ctx.fillStyle = "rgba(255,241,214,.18)";
-  ctx.fillRect(game.parkTarget.x - 42, game.parkTarget.y - 28, 84, 56);
-  ctx.strokeStyle = COLORS.teal;
-  ctx.strokeRect(game.parkTarget.x - 42, game.parkTarget.y - 28, 84, 56);
-}
-
-function drawParkingPuzzle() {
-  game.obstacles.forEach((o) => {
-    circle(o.x, o.y, o.r, "rgba(38,30,24,.88)");
-    ctx.strokeStyle = "rgba(255,241,214,.22)";
-    ctx.strokeRect(o.x - o.r, o.y - o.r, o.r * 2, o.r * 2);
-  });
-  if (game.route.length > 1) {
-    ctx.strokeStyle = COLORS.gold;
-    ctx.lineWidth = 4;
+function drawRoadScene() {
+  ctx.fillStyle = "#060811";
+  ctx.fillRect(0, 0, W, H);
+  drawImageCover("mountain", 0, 0, W, H);
+  ctx.fillStyle = "rgba(4,5,12,.68)";
+  ctx.fillRect(0, 0, W, H);
+  drawImageCover("leopard", 0, 0, 210, H);
+  drawImageCover("leopard", 750, 0, 210, H);
+  ctx.fillStyle = "rgba(5,5,13,.58)";
+  ctx.fillRect(0, 0, 210, H);
+  ctx.fillRect(750, 0, 210, H);
+  ctx.fillStyle = COLORS.road;
+  ctx.fillRect(220, 0, 520, H);
+  ctx.strokeStyle = "rgba(255,240,210,.34)";
+  ctx.lineWidth = 4;
+  ctx.strokeRect(220, -4, 520, H + 8);
+  ctx.strokeStyle = "rgba(255,211,107,.42)";
+  ctx.lineWidth = 3;
+  for (let y = -80 + game.roadScroll; y < H + 80; y += 80) {
     ctx.beginPath();
-    game.route.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
+    ctx.moveTo(392, y);
+    ctx.lineTo(392, y + 38);
+    ctx.moveTo(568, y);
+    ctx.lineTo(568, y + 38);
     ctx.stroke();
   }
-  drawPanel(36, 28, 292, 78, "draw jojo's route");
-  ctx.fillStyle = COLORS.cream;
-  ctx.font = "bold 13px Trebuchet MS";
-  ctx.fillText("avoid rocks/palms; stop near RAV4", 58, 76);
+  drawImageContain("jojo", 440, 42, 80, 120);
+  if (!assets.jojo.ready) drawTopCar(480, 104, "#eee5d7", "J");
+  drawPixelHeart(456, 168, COLORS.rose, 0.5);
+  drawPixelHeart(494, 168, COLORS.rose, 0.5);
 }
 
-function drawSetupPuzzle() {
-  drawPanel(36, 28, 252, 196, "setup order");
-  game.setupOrder.forEach((id, index) => {
-    ctx.fillStyle = index < game.setupIndex ? COLORS.green : index === game.setupIndex ? COLORS.gold : "rgba(255,241,214,.5)";
-    ctx.font = "bold 13px Trebuchet MS";
-    ctx.fillText(`${index + 1}. ${id}`, 58, 72 + index * 23);
-  });
-  game.items.forEach((item) => {
-    const active = game.setupOrder[game.setupIndex] === item.id;
-    ctx.fillStyle = item.placed ? "rgba(124,255,155,.18)" : active ? "rgba(248,207,104,.18)" : "rgba(8,7,18,.48)";
-    ctx.fillRect(item.x, item.y, item.w, item.h);
-    ctx.strokeStyle = item.placed ? COLORS.green : active ? COLORS.gold : "rgba(255,241,214,.28)";
-    ctx.lineWidth = active ? 3 : 2;
-    ctx.strokeRect(item.x, item.y, item.w, item.h);
-    drawSetupAsset(item.id, item.x + item.w / 2, item.y + item.h / 2 - 4);
-    ctx.fillStyle = COLORS.cream;
-    ctx.font = "bold 10px Trebuchet MS";
-    center(item.id, item.x + item.w / 2, item.y + item.h - 8);
-  });
-  if (game.wind) {
-    const b = game.wind.box;
-    ctx.strokeStyle = COLORS.danger;
-    ctx.lineWidth = 4;
-    ctx.setLineDash([8, 6]);
-    ctx.strokeRect(b.x, b.y, b.w, b.h);
-    ctx.setLineDash([]);
-    drawTimerBar(b.x, b.y - 12, b.w, 7, game.wind.t / 2.25, COLORS.danger);
-  }
-  drawTimerBar(752, 38, 150, 12, game.vibe / 100, COLORS.teal);
+function drawRoadObjects() {
+  game.cards.forEach(drawRoadCard);
+  game.traffic.forEach(drawTrafficCar);
+  drawPatrolCar();
+  drawRav4(game.player.x, game.player.y, game.player.invuln > 0);
 }
 
-function drawMountainPhoto() {
-  drawSetupPuzzle();
-  const target = photoTarget();
-  const frame = photoFrame();
-  ctx.strokeStyle = "rgba(124,255,155,.55)";
-  ctx.lineWidth = 3;
-  ctx.strokeRect(target.x, target.y, target.w, target.h);
-  drawAsset("digicam", 72, 336, 112, 84, "contain");
-  ctx.strokeStyle = COLORS.gold;
-  ctx.lineWidth = 5;
-  ctx.strokeRect(frame.x, frame.y, frame.w, frame.h);
-  ctx.fillStyle = "rgba(8,7,18,.55)";
-  ctx.fillRect(frame.x + 10, frame.y + 10, 86, 26);
-  ctx.fillStyle = COLORS.cream;
-  ctx.font = "bold 12px Trebuchet MS";
-  ctx.fillText("SPACE / TAP", frame.x + 18, frame.y + 28);
+function drawRoadCard(card) {
+  ctx.save();
+  ctx.translate(card.x, card.y + Math.sin(card.wobble * 3) * 4);
+  ctx.rotate(Math.sin(card.wobble * 2) * 0.08);
+  drawPlayingCard(-18, -26, card.label, 0.55);
+  ctx.restore();
 }
 
-function drawDeductionCards() {
-  drawPanel(36, 28, 318, 142, "deduction clues");
-  ctx.fillStyle = COLORS.cream;
-  ctx.font = "bold 13px Trebuchet MS";
-  ctx.fillText("Queen is not beside the steak.", 58, 72);
-  ctx.fillText("King is closer to antenna side.", 58, 98);
-  ctx.fillText("Find Q♥ + K♠ in limited flips.", 58, 124);
-  game.cards.forEach((card) => {
-    const open = card.open || card.solved;
-    ctx.fillStyle = card.solved ? "rgba(124,255,155,.86)" : open ? COLORS.cream : COLORS.plum;
-    ctx.fillRect(card.x, card.y, card.w, card.h);
-    ctx.strokeStyle = open ? COLORS.gold : "rgba(255,241,214,.48)";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(card.x, card.y, card.w, card.h);
-    ctx.fillStyle = open ? COLORS.plum : COLORS.gold;
-    ctx.font = "bold 18px Trebuchet MS";
-    center(open ? card.label : "?", card.x + card.w / 2, card.y + 36);
-  });
+function drawTrafficCar(car) {
+  drawTopCar(car.x, car.y, car.hit ? "#343843" : car.color, "");
 }
 
-function drawSetupAsset(id, x, y) {
-  const map = { chairs: "chairs", fries: "fries", steak: "steak", digicam: "digicam", cards: "cards" };
-  if (map[id]) {
-    drawAsset(map[id], x - 32, y - 28, 64, 48, "contain");
+function drawPatrolCar() {
+  if (!game.patrol.active) {
+    if (game.patrol.cooldown < 0.95) {
+      const y = game.patrol.nextY;
+      const a = 0.22 + Math.sin(clock * 14) * 0.12;
+      ctx.fillStyle = `rgba(255,211,107,${a})`;
+      ctx.fillRect(222, y - 24, 516, 48);
+      ctx.fillStyle = COLORS.gold;
+      ctx.font = "bold 11px Courier New";
+      center("patrol crossing", W / 2, y + 4);
+    }
     return;
   }
-  if (id === "drinks") {
-    ctx.fillStyle = COLORS.teal;
-    ctx.fillRect(x - 18, y - 16, 14, 28);
-    ctx.fillStyle = COLORS.coral;
-    ctx.fillRect(x + 4, y - 16, 14, 28);
-  }
+  const box = roadPatrolBox();
+  ctx.fillStyle = "rgba(255,211,107,.1)";
+  ctx.fillRect(box.x - 18, box.y - 8, box.w + 36, box.h + 16);
+  drawTopCar(box.x + box.w / 2, box.y + box.h / 2, "#e8f1fb", "P");
+  ctx.fillStyle = COLORS.danger;
+  ctx.fillRect(box.x + 18, box.y + 26, box.w - 36, 7);
 }
 
-/* LEVEL 03: STEALTH, CAMERA, ROUTE CHOICE */
+function drawRav4(x, y, blink) {
+  ctx.globalAlpha = blink && Math.floor(clock * 14) % 2 === 0 ? 0.48 : 1;
+  if (!drawImageContain("rav4", x - 38, y - 62, 76, 124)) drawTopCar(x, y, "#d7ebf0", "R");
+  ctx.globalAlpha = 1;
+}
+
+function drawRoadHud() {
+  drawPixelPanel(30, 26, 238, 122, "digicam road");
+  const progress = 1 - clamp(game.distance / game.maxDistance, 0, 1);
+  drawMeter(58, 78, 142, 12, progress, COLORS.teal);
+  drawMeter(58, 108, 142, 12, game.timer / 45, game.timer < 8 ? COLORS.danger : COLORS.gold);
+  ctx.fillStyle = COLORS.cream;
+  ctx.font = "bold 11px Courier New";
+  ctx.fillText("distance", 208, 88);
+  ctx.fillText("timer", 208, 118);
+  ctx.fillText(game.driftShield ? "3-card promise held" : `streak ${game.streak}`, 58, 140);
+}
+
+function drawRoadParkWin() {
+  const t = clamp(game.winAnim / 1.4, 0, 1);
+  drawRav4(430 - (1 - t) * 140, 330, false);
+  drawImageContain("jojo", 490 + (1 - t) * 140, 270, 82, 126);
+  if (!assets.jojo.ready) drawTopCar(532 + (1 - t) * 140, 332, "#eee5d7", "J");
+  drawPlayingCard(250 + t * 130, 130, "Q♥", 0.9);
+  drawPlayingCard(668 - t * 130, 130, "K♠", 0.9);
+  if (game.winAnim > 1.1) {
+    drawImageContain("playingCards", 394, 96, 172, 116);
+    burst(480, 230, 2, COLORS.rose);
+  }
+  ctx.strokeStyle = `rgba(255,211,107,${0.25 + Math.sin(clock * 8) * 0.15})`;
+  ctx.lineWidth = 8;
+  ctx.strokeRect(230, 62, 500, 392);
+}
+
+/* LEVEL 03: CRUISE DIGICAM */
 
 function setupCruise() {
-  gameTitle.textContent = "03";
-  setHint("Frame the memories. Avoid the patrol.");
+  dom.title.textContent = "03";
+  setHint("Frame the memory. Dodge the patrol.");
   game = {
-    phase: "memories",
+    id: "cruise",
+    phase: "shoot",
     hearts: 3,
+    hurtCooldown: 0,
     score: 0,
-    targetScore: 8,
+    momentCount: 0,
+    queen: false,
+    king: false,
+    aim: { x: W / 2, y: H / 2 },
+    holding: false,
+    charge: 0,
+    overheld: false,
     exposure: 0,
-    player: { x: 118, y: 430, vx: 0, vy: 0 },
-    target: null,
-    guard: { x: 805, y: 356, dir: -1 },
-    captureHeld: false,
-    captureProgress: 0,
-    blur: 0,
-    memories: [
-      memory("wave reflection", 226, 372, 2, 0.75),
-      memory("quiet corner", 374, 470, 2, 0.75),
-      memory("tiny smile", 522, 392, 3, 0.9),
-      memory("almost-kiss moment", 730, 438, 4, 1.05),
-      memory("blurry-but-cute shot", 842, 348, 1, 0.6)
-    ],
-    hides: [
-      { x: 318, y: 414, w: 128, h: 58 },
-      { x: 590, y: 472, w: 145, h: 48 }
-    ],
-    exit: { x: 884, y: 460, w: 54, h: 54 },
-    wake: []
+    shakeLevel: 0,
+    lastAim: { x: W / 2, y: H / 2 },
+    items: makeCruiseItems(),
+    spawnTimer: 1.4,
+    guard: makeGuardPass(),
+    guardWait: randRange(1.4, 2.8),
+    waterScroll: 0,
+    film: [],
+    flash: 0,
+    completeTimer: 0
   };
 }
 
-function memory(label, x, y, score, hold) {
-  return { label, x, y, score, hold, captured: false };
+function makeCruiseItems() {
+  const labels = shuffle(["wave reflection", "floating lantern", "little smile", "silhouette", "almost-kiss", "ripple pattern", "blurry cute"]);
+  const items = labels.slice(0, 7).map((label, i) => makeCruiseItem("moment", W + 120 + i * randRange(120, 178), label));
+  items.splice(2, 0, makeCruiseItem("queen", W + 520, "Q♥"));
+  items.splice(5, 0, makeCruiseItem("king", W + 960, "K♠"));
+  return items;
 }
 
-function cruisePointerDown(p) {
-  if (inside(p, captureButton())) {
-    game.captureHeld = true;
-    return;
-  }
-  game.target = { x: p.x, y: p.y };
+function makeCruiseItem(kind, x, label) {
+  const value = kind === "moment" ? randomChoice([1, 2, 2, 3]) : kind === "minor" ? 1 : 2;
+  return {
+    kind,
+    label,
+    x,
+    y: randRange(210, 410),
+    value,
+    hold: kind === "minor" ? 0.58 : kind === "queen" || kind === "king" ? 0.72 : 0.56 + value * 0.12 + randRange(-0.05, 0.08),
+    wobble: randRange(0, 6),
+    captured: false
+  };
 }
 
-function cruisePointerMove(p) {
-  if (game.captureHeld) return;
-  if (pointer.down) game.target = { x: p.x, y: p.y };
+function makeGuardPass() {
+  const fromRight = maybe(0.7);
+  return {
+    active: false,
+    x: fromRight ? W + 140 : -140,
+    y: randRange(240, 330),
+    vx: fromRight ? -randRange(112, 150) : randRange(106, 142),
+    dir: fromRight ? -1 : 1,
+    sweep: randRange(0, 6)
+  };
 }
 
 function updateCruise(dt) {
-  moveCruisePlayer(dt);
-  updatePatrol(dt);
-  updateExposure(dt);
-  updateCapture(dt);
-  const exitOpen = game.score >= game.targetScore;
-  if (exitOpen && inside({ x: game.player.x, y: game.player.y }, game.exit)) {
-    finishLevel("Enough proof. The rest can stay between the waves.");
+  game.hurtCooldown = Math.max(0, game.hurtCooldown - dt);
+  game.waterScroll = (game.waterScroll + dt * 64) % 120;
+  game.flash = Math.max(0, game.flash - dt * 2.2);
+  moveCruiseAim(dt);
+  updateCruiseItems(dt);
+  updateCruiseGuard(dt);
+  updateCruiseCharge(dt);
+  if (game.phase === "complete") {
+    game.completeTimer += dt;
+    if (game.completeTimer > 1.2) finishLevel("The filmstrip kept what the patrol missed.");
   }
-  setStatus(`MEMORY ${game.score}/${game.targetScore}\n${heartText(game.hearts)}`);
+  setStatus(`photos ${game.momentCount}/5 · Q ${game.queen ? "yes" : "no"} · K ${game.king ? "yes" : "no"}\nlight ${Math.round(game.exposure * 100)}% · ${heartText(game.hearts)}`);
 }
 
-function moveCruisePlayer(dt) {
+function moveCruiseAim(dt) {
+  const oldX = game.aim.x;
+  const oldY = game.aim.y;
   let dx = 0;
   let dy = 0;
   if (keys.has("arrowleft") || keys.has("a")) dx -= 1;
   if (keys.has("arrowright") || keys.has("d")) dx += 1;
   if (keys.has("arrowup") || keys.has("w")) dy -= 1;
   if (keys.has("arrowdown") || keys.has("s")) dy += 1;
-  if (!dx && !dy && game.target) {
-    dx = game.target.x - game.player.x;
-    dy = game.target.y - game.player.y;
-    if (Math.hypot(dx, dy) < 8) {
-      game.target = null;
-      dx = 0;
-      dy = 0;
-    }
-  }
   const len = Math.hypot(dx, dy) || 1;
-  const speed = game.captureHeld ? 42 : 126;
-  game.player.vx = dx ? (dx / len) * speed : 0;
-  game.player.vy = dy ? (dy / len) * speed : 0;
-  game.player.x = clamp(game.player.x + game.player.vx * dt, 50, 910);
-  game.player.y = clamp(game.player.y + game.player.vy * dt, 328, 506);
-  if (dx || dy) game.wake.push({ x: game.player.x - 22, y: game.player.y + 18, age: 0 });
-  game.wake.forEach((w) => { w.age += dt; });
-  game.wake = game.wake.filter((w) => w.age < 0.8);
+  game.aim.x = clamp(game.aim.x + (dx / len) * 220 * dt, 88, W - 88);
+  game.aim.y = clamp(game.aim.y + (dy / len) * 220 * dt, 150, H - 96);
+  const moved = Math.hypot(game.aim.x - oldX, game.aim.y - oldY);
+  if (game.holding && moved > 0.2) game.shakeLevel = clamp(game.shakeLevel + moved * 0.006, 0, 1.2);
+  game.lastAim = { x: game.aim.x, y: game.aim.y };
 }
 
-function updatePatrol(dt) {
-  game.guard.x += game.guard.dir * (74 + game.score * 3) * dt;
-  game.guard.y += Math.sin(clock * 1.2) * 13 * dt;
-  if (game.guard.x < 520) game.guard.dir = 1;
-  if (game.guard.x > 880) game.guard.dir = -1;
-  game.guard.y = clamp(game.guard.y, 336, 450);
-}
-
-function updateExposure(dt) {
-  const hidden = game.hides.some((h) => inside({ x: game.player.x, y: game.player.y }, h));
-  const spotted = inSpotlight(game.player.x, game.player.y) && !hidden;
-  if (spotted) {
-    game.exposure += dt * (game.captureHeld ? 0.52 : 0.36);
-    if (game.exposure > 0.55) setHint("Warning. Break the light or hide.");
-  } else {
-    game.exposure -= dt * (hidden ? 0.62 : 0.28);
+function updateCruiseItems(dt) {
+  const speed = 78;
+  game.items.forEach((item) => {
+    item.x -= speed * dt;
+    item.wobble += dt;
+  });
+  game.items = game.items.filter((item) => item.x > -90 && !item.captured);
+  game.spawnTimer -= dt;
+  if (game.spawnTimer <= 0) {
+    const kind = randomCruiseSpawnKind();
+    game.items.push(makeCruiseItem(kind, W + randRange(60, 180), kind === "minor" ? randomChoice(["6♣", "9♦", "A♣"]) : randomChoice(["wave reflection", "quiet corner", "tiny smile", "ripple"])));
+    game.spawnTimer = randRange(1.0, 1.8);
   }
-  game.exposure = clamp(game.exposure, 0, 1);
+  if (!game.queen && !game.items.some((item) => item.kind === "queen")) game.items.push(makeCruiseItem("queen", W + 220, "Q♥"));
+  if (!game.king && !game.items.some((item) => item.kind === "king")) game.items.push(makeCruiseItem("king", W + 420, "K♠"));
+}
+
+function randomCruiseSpawnKind() {
+  const r = rand();
+  if (r > 0.78) return "minor";
+  return "moment";
+}
+
+function updateCruiseGuard(dt) {
+  const guard = game.guard;
+  if (!guard.active) {
+    game.guardWait -= dt;
+    if (game.guardWait <= 0) {
+      game.guard = makeGuardPass();
+      game.guard.active = true;
+    }
+    return;
+  }
+  guard.x += guard.vx * dt;
+  guard.y += Math.sin(clock * 1.3 + guard.sweep) * 12 * dt;
+  guard.sweep += dt;
+  if ((guard.dir < 0 && guard.x < -180) || (guard.dir > 0 && guard.x > W + 180)) {
+    game.guard = makeGuardPass();
+    game.guardWait = randRange(2.0, 3.6);
+  }
+}
+
+function updateCruiseCharge(dt) {
+  if (!game.holding) {
+    game.charge = Math.max(0, game.charge - dt * 0.5);
+    game.exposure = Math.max(0, game.exposure - dt * 0.48);
+    game.shakeLevel = Math.max(0, game.shakeLevel - dt * 0.55);
+    return;
+  }
+  game.charge += dt;
+  game.shakeLevel = Math.max(0, game.shakeLevel - dt * 0.28);
+  if (cruiseBeamHitsFrame(cruiseFrame())) {
+    game.exposure = clamp(game.exposure + dt * 1.15, 0, 1);
+    setHint("Light on the frame. Wait it out or release later.");
+  } else {
+    game.exposure = Math.max(0, game.exposure - dt * 0.42);
+  }
+  if (game.charge > 1.15) game.overheld = true;
+  if (game.charge > 1.42) {
+    game.charge = 1.42;
+    shake();
+  }
   if (game.exposure >= 1) {
+    game.holding = false;
+    game.charge = 0;
+    game.exposure = 0.18;
+    loseHeart("caught charging");
+  }
+}
+
+function cruisePointerDown(p) {
+  game.aim.x = p.x;
+  game.aim.y = p.y;
+  beginCruiseCapture();
+}
+
+function cruisePointerMove(p) {
+  if (game.holding) game.shakeLevel = clamp(game.shakeLevel + dist(game.aim.x, game.aim.y, p.x, p.y) * 0.007, 0, 1.2);
+  game.aim.x = clamp(p.x, 88, W - 88);
+  game.aim.y = clamp(p.y, 150, H - 96);
+}
+
+function cruisePointerUp() {
+  releaseCruiseCapture();
+}
+
+function beginCruiseCapture() {
+  if (!game || currentLevel !== 3 || game.phase !== "shoot" || game.holding) return;
+  game.holding = true;
+  game.charge = 0;
+  game.overheld = false;
+  cue("camera-charge");
+}
+
+function releaseCruiseCapture() {
+  if (!game || currentLevel !== 3 || !game.holding) return;
+  const charge = game.charge;
+  game.holding = false;
+  game.charge = 0;
+  const frame = cruiseFrame();
+  const target = activeCruiseTarget(frame);
+  if (charge < 0.26) {
+    floatText("too quick", game.aim.x, game.aim.y - 58, COLORS.gold);
+    return;
+  }
+  if (game.overheld || charge > 1.16) {
+    floatText("camera shook", game.aim.x, game.aim.y - 58, COLORS.danger);
+    game.shakeLevel = clamp(game.shakeLevel + 0.35, 0, 1.2);
+    shake();
+    cue("camera-shake");
+    return;
+  }
+  if (game.shakeLevel > 0.64) {
+    floatText("too blurry", game.aim.x, game.aim.y - 58, COLORS.danger);
+    game.shakeLevel = Math.max(0.2, game.shakeLevel - 0.3);
+    shake();
+    return;
+  }
+  if (cruiseBeamHitsFrame(frame)) {
+    if (target) target.captured = true;
     game.exposure = 0.25;
-    game.player.x = 118;
-    game.player.y = 430;
-    game.target = null;
-    hurt("caught in light", 1);
-  }
-}
-
-function updateCapture(dt) {
-  if (!game.captureHeld) {
-    game.captureProgress = Math.max(0, game.captureProgress - dt * 0.65);
-    game.blur = Math.max(0, game.blur - dt * 0.8);
+    loseHeart("flash seen");
     return;
   }
-  const target = activeMemory();
-  const speed = Math.hypot(game.player.vx, game.player.vy);
   if (!target) {
-    game.blur += dt * 0.6;
-    game.captureProgress = Math.max(0, game.captureProgress - dt);
+    floatText("empty frame", game.aim.x, game.aim.y - 58, COLORS.gold);
+    cue("empty-photo");
     return;
   }
-  const steady = speed < 52 && game.exposure < 0.72;
-  if (steady) {
-    game.captureProgress += dt;
-    game.blur = Math.max(0, game.blur - dt);
-    if (game.captureProgress >= target.hold) {
-      target.captured = true;
-      game.score += target.score;
-      game.captureProgress = 0;
-      game.blur = 0;
-      burst(target.x, target.y, 16);
-      cue("photo");
-      setHint(game.score >= game.targetScore ? "Exit path open. Leave clean." : "Memory framed. Choose the next risk.");
-    }
+  if (charge < target.hold * 0.58) {
+    floatText("underexposed", game.aim.x, game.aim.y - 58, COLORS.gold);
+    return;
+  }
+  if (charge > target.hold + 0.42) {
+    floatText("missed the moment", game.aim.x, game.aim.y - 58, COLORS.gold);
+    return;
+  }
+  captureCruiseTarget(target, Math.abs(charge - target.hold) <= 0.16 && game.shakeLevel < 0.36);
+}
+
+function activeCruiseTarget(frame) {
+  return game.items.find((item) => !item.captured && item.x >= frame.x && item.x <= frame.x + frame.w && item.y >= frame.y && item.y <= frame.y + frame.h);
+}
+
+function captureCruiseTarget(target, perfect) {
+  target.captured = true;
+  game.flash = 1;
+  const points = perfect ? 3 : 1;
+  if (target.kind === "moment") {
+    game.momentCount += 1;
+    game.score += points;
+    game.film.push(perfect ? "★" : "·");
+    floatText(perfect ? "+3 crisp" : "+1 saved", target.x, target.y - 32, perfect ? COLORS.green : COLORS.gold);
+  } else if (target.kind === "queen") {
+    game.queen = true;
+    game.film.push("Q");
+    floatText("queen kept", target.x, target.y - 32, COLORS.rose);
+  } else if (target.kind === "king") {
+    game.king = true;
+    game.film.push("K");
+    floatText("king kept", target.x, target.y - 32, COLORS.gold);
   } else {
-    game.blur += dt;
-    game.captureProgress = Math.max(0, game.captureProgress - dt * 0.8);
-    if (game.blur > 1.1) {
-      game.blur = 0;
-      hurt("blurry shot", 0);
-    }
+    game.score += 1;
+    game.film.push("♣");
+    floatText("+1", target.x, target.y - 32, COLORS.teal);
+  }
+  burst(target.x, target.y, perfect ? 22 : 12, perfect ? COLORS.green : COLORS.gold);
+  cue("photo");
+  if (game.momentCount >= 5 && game.queen && game.king) {
+    game.phase = "complete";
+    game.completeTimer = 0;
+    setHint("Filmstrip full. Hold the frame.");
   }
 }
 
-function activeMemory() {
-  const frame = cameraFrame();
-  return game.memories.find((m) => !m.captured && m.x >= frame.x && m.x <= frame.x + frame.w && m.y >= frame.y && m.y <= frame.y + frame.h);
+function cruiseFrame() {
+  return { x: game.aim.x - 86, y: game.aim.y - 56, w: 172, h: 104 };
 }
 
-function cameraFrame() {
-  return { x: game.player.x - 72, y: game.player.y - 72, w: 144, h: 92 };
+function cruiseSpotlight() {
+  const guard = game.guard;
+  const angle = guard.dir < 0 ? Math.PI + Math.sin(clock * 1.4 + guard.sweep) * 0.48 : Math.sin(clock * 1.4 + guard.sweep) * 0.48;
+  return { x: guard.x - guard.dir * 38, y: guard.y + 10, angle, range: 300, width: 0.34 };
 }
 
-function spotlight() {
-  const angle = Math.PI + Math.sin(clock * 1.25) * 0.62;
-  return { x: game.guard.x - 16, y: game.guard.y + 8, angle, range: 265, width: 0.42 };
+function cruiseBeamHitsFrame(frame) {
+  if (!game.guard.active) return false;
+  const points = [
+    { x: frame.x + frame.w / 2, y: frame.y + frame.h / 2 },
+    { x: frame.x, y: frame.y },
+    { x: frame.x + frame.w, y: frame.y },
+    { x: frame.x, y: frame.y + frame.h },
+    { x: frame.x + frame.w, y: frame.y + frame.h }
+  ];
+  return points.some((p) => inCruiseSpotlight(p.x, p.y));
 }
 
-function inSpotlight(x, y) {
-  const s = spotlight();
+function inCruiseSpotlight(x, y) {
+  const s = cruiseSpotlight();
   const dx = x - s.x;
   const dy = y - s.y;
   const d = Math.hypot(dx, dy);
@@ -1286,77 +1377,78 @@ function inSpotlight(x, y) {
 }
 
 function drawCruise() {
-  drawAsset("cruiseScene", 0, 0, W, H, "cover");
-  ctx.fillStyle = "rgba(3,12,32,.25)";
-  ctx.fillRect(0, 310, W, 230);
-  drawCruiseWater();
-  drawHideZones();
-  drawCruiseMemories();
-  drawSpotlight();
-  drawCruiseWake();
+  drawCruiseScene();
+  drawCruiseItems();
+  drawCruiseGuard();
   drawCruiseBoat();
-  drawCoastGuard();
-  if (game.captureHeld) drawCameraFrame();
+  drawCruiseCamera();
   drawCruiseHud();
-  drawHearts(818, 28, game.hearts);
+  drawHearts(812, 28, game.hearts);
+  if (game.flash > 0) {
+    ctx.fillStyle = `rgba(255,255,255,${game.flash * 0.28})`;
+    ctx.fillRect(0, 0, W, H);
+  }
   drawEffects();
 }
 
-function drawCruiseWater() {
+function drawCruiseScene() {
+  drawImageCover("cruiseScene", 0, 0, W, H);
+  ctx.fillStyle = "rgba(3,8,24,.58)";
+  ctx.fillRect(0, 0, W, H);
+  const water = ctx.createLinearGradient(0, 170, 0, H);
+  water.addColorStop(0, "rgba(11,52,83,.52)");
+  water.addColorStop(1, "rgba(3,10,24,.92)");
+  ctx.fillStyle = water;
+  ctx.fillRect(0, 178, W, H - 178);
   for (let i = 0; i < 7; i += 1) {
-    ctx.strokeStyle = `rgba(126,215,230,${0.18 - i * 0.015})`;
+    ctx.strokeStyle = `rgba(137,225,236,${0.2 - i * 0.018})`;
     ctx.lineWidth = 2;
     ctx.beginPath();
-    for (let x = 0; x <= W; x += 8) {
-      const y = 330 + i * 30 + Math.sin(x * 0.024 + clock * 1.8 + i) * 6;
-      if (x === 0) ctx.moveTo(x, y);
+    for (let x = -20; x <= W + 20; x += 8) {
+      const y = 210 + i * 42 + Math.sin(x * 0.024 + clock * 1.5 + i) * 6;
+      if (x === -20) ctx.moveTo(x, y);
       else ctx.lineTo(x, y);
     }
     ctx.stroke();
   }
+  for (let i = 0; i < 18; i += 1) {
+    const x = (i * 77 - game.waterScroll * 0.7 + W) % W;
+    const y = 195 + (i * 37) % 290;
+    ctx.fillStyle = `rgba(255,211,107,${0.12 + Math.sin(clock * 2 + i) * 0.06})`;
+    ctx.fillRect(x, y, 12, 2);
+  }
 }
 
-function drawHideZones() {
-  game.hides.forEach((h) => {
-    ctx.fillStyle = "rgba(8,7,18,.34)";
-    ctx.fillRect(h.x, h.y, h.w, h.h);
-    ctx.strokeStyle = "rgba(56,198,180,.34)";
-    ctx.strokeRect(h.x, h.y, h.w, h.h);
+function drawCruiseItems() {
+  game.items.forEach((item) => {
+    const y = item.y + Math.sin(item.wobble * 2.4) * 5;
+    if (item.kind === "queen") drawPlayingCard(item.x - 20, y - 28, "Q♥", 0.62);
+    else if (item.kind === "king") drawPlayingCard(item.x - 20, y - 28, "K♠", 0.62);
+    else if (item.kind === "minor") drawPlayingCard(item.x - 16, y - 22, item.label, 0.48);
+    else {
+      ctx.strokeStyle = item.value >= 3 ? COLORS.rose : COLORS.teal;
+      ctx.lineWidth = 2;
+      ctx.setLineDash([6, 6]);
+      ctx.strokeRect(item.x - 36, y - 26, 72, 52);
+      ctx.setLineDash([]);
+      drawPixelHeart(item.x - 12, y - 12, item.value >= 3 ? COLORS.rose : COLORS.gold, 0.58);
+      ctx.fillStyle = COLORS.cream;
+      ctx.font = "bold 10px Courier New";
+      center(`${item.label} · ${item.value}pt`, item.x, y + 42);
+    }
   });
 }
 
-function drawCruiseMemories() {
-  game.memories.forEach((m) => {
-    if (m.captured) return;
-    ctx.strokeStyle = m.score >= 4 ? COLORS.danger : m.score >= 3 ? COLORS.gold : COLORS.teal;
-    ctx.lineWidth = 2;
-    ctx.setLineDash([6, 6]);
-    ctx.strokeRect(m.x - 30, m.y - 22, 60, 44);
-    ctx.setLineDash([]);
-    drawPixelHeart(m.x - 11, m.y - 10, ctx.strokeStyle, 0.58);
-    ctx.fillStyle = COLORS.cream;
-    ctx.font = "bold 10px Trebuchet MS";
-    center(`${m.score}pt`, m.x, m.y + 34);
-  });
-  const open = game.score >= game.targetScore;
-  ctx.fillStyle = open ? "rgba(124,255,155,.25)" : "rgba(255,241,214,.1)";
-  ctx.fillRect(game.exit.x, game.exit.y, game.exit.w, game.exit.h);
-  ctx.strokeStyle = open ? COLORS.green : "rgba(255,241,214,.28)";
-  ctx.strokeRect(game.exit.x, game.exit.y, game.exit.w, game.exit.h);
-  ctx.fillStyle = open ? COLORS.green : COLORS.cream;
-  ctx.font = "bold 10px Trebuchet MS";
-  center(open ? "EXIT" : "LOCK", game.exit.x + game.exit.w / 2, game.exit.y + 34);
-}
-
-function drawSpotlight() {
-  const s = spotlight();
+function drawCruiseGuard() {
+  if (!game.guard.active) return;
+  const s = cruiseSpotlight();
   ctx.save();
   ctx.translate(s.x, s.y);
   ctx.rotate(s.angle);
   const beam = ctx.createLinearGradient(0, 0, s.range, 0);
-  beam.addColorStop(0, "rgba(255,240,150,.34)");
-  beam.addColorStop(0.75, "rgba(255,240,150,.12)");
-  beam.addColorStop(1, "rgba(255,240,150,0)");
+  beam.addColorStop(0, "rgba(255,231,150,.38)");
+  beam.addColorStop(0.74, "rgba(255,231,150,.13)");
+  beam.addColorStop(1, "rgba(255,231,150,0)");
   ctx.fillStyle = beam;
   ctx.beginPath();
   ctx.moveTo(0, 0);
@@ -1365,206 +1457,179 @@ function drawSpotlight() {
   ctx.closePath();
   ctx.fill();
   ctx.restore();
-}
-
-function drawCruiseWake() {
-  game.wake.forEach((w) => {
-    const a = 1 - w.age / 0.8;
-    ctx.strokeStyle = `rgba(255,255,255,${a * 0.34})`;
-    ctx.beginPath();
-    ctx.arc(w.x, w.y, 10 + w.age * 22, 0.2, Math.PI - 0.2);
-    ctx.stroke();
-  });
+  drawImageContain("coastGuard", game.guard.x - 74, game.guard.y - 42, 148, 76);
+  if (!assets.coastGuard.ready) {
+    ctx.fillStyle = "#eaf4f8";
+    ctx.fillRect(game.guard.x - 58, game.guard.y - 14, 116, 30);
+    ctx.fillStyle = COLORS.danger;
+    ctx.fillRect(game.guard.x - 64, game.guard.y + 14, 128, 7);
+  }
 }
 
 function drawCruiseBoat() {
-  drawAsset("cruiseBoat", game.player.x - 36, game.player.y - 28, 72, 56, "contain");
+  const bob = Math.sin(clock * 1.7) * 5;
+  drawImageContain("cruiseBoat", 98, 292 + bob, 238, 116);
   if (!assets.cruiseBoat.ready) {
     ctx.fillStyle = "#f6f1e8";
-    ctx.fillRect(game.player.x - 30, game.player.y - 8, 60, 22);
+    ctx.fillRect(120, 350 + bob, 190, 38);
     ctx.fillStyle = COLORS.teal;
-    ctx.fillRect(game.player.x - 36, game.player.y + 12, 72, 7);
+    ctx.fillRect(104, 385 + bob, 222, 8);
   }
+  drawImageCover("leopard", 198, 326 + bob, 54, 22);
+  ctx.fillStyle = "rgba(5,5,13,.25)";
+  ctx.fillRect(198, 326 + bob, 54, 22);
 }
 
-function drawCoastGuard() {
-  drawAsset("coastGuard", game.guard.x - 34, game.guard.y - 34, 68, 68, "contain");
-  if (!assets.coastGuard.ready) {
-    ctx.fillStyle = "#eff6fb";
-    ctx.fillRect(game.guard.x - 34, game.guard.y - 8, 68, 24);
-    ctx.fillStyle = COLORS.danger;
-    ctx.fillRect(game.guard.x - 39, game.guard.y + 15, 78, 6);
-  }
-}
-
-function drawCameraFrame() {
-  const frame = cameraFrame();
-  const target = activeMemory();
-  ctx.strokeStyle = target ? COLORS.green : game.blur > 0.55 ? COLORS.danger : COLORS.gold;
+function drawCruiseCamera() {
+  const frame = cruiseFrame();
+  const target = activeCruiseTarget(frame);
+  ctx.fillStyle = "rgba(0,0,0,.22)";
+  ctx.fillRect(0, 0, W, frame.y);
+  ctx.fillRect(0, frame.y + frame.h, W, H - frame.y - frame.h);
+  ctx.fillRect(0, frame.y, frame.x, frame.h);
+  ctx.fillRect(frame.x + frame.w, frame.y, W - frame.x - frame.w, frame.h);
+  ctx.strokeStyle = target ? COLORS.green : cruiseBeamHitsFrame(frame) ? COLORS.danger : COLORS.gold;
   ctx.lineWidth = 4;
   ctx.strokeRect(frame.x, frame.y, frame.w, frame.h);
-  ctx.fillStyle = "rgba(8,7,18,.48)";
-  ctx.fillRect(frame.x, frame.y - 28, frame.w, 22);
-  drawTimerBar(frame.x + 10, frame.y - 21, frame.w - 20, 8, target ? game.captureProgress / target.hold : 0, target ? COLORS.green : COLORS.danger);
+  ctx.strokeStyle = "rgba(255,240,210,.34)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(frame.x + frame.w / 2, frame.y + 8);
+  ctx.lineTo(frame.x + frame.w / 2, frame.y + frame.h - 8);
+  ctx.moveTo(frame.x + 8, frame.y + frame.h / 2);
+  ctx.lineTo(frame.x + frame.w - 8, frame.y + frame.h / 2);
+  ctx.stroke();
+  drawImageContain("digicam", 718, 350, 196, 142);
+  const charge = clamp(game.charge / 1.15, 0, 1);
+  drawMeter(756, 474, 118, 10, charge, game.overheld ? COLORS.danger : charge > 0.7 ? COLORS.green : COLORS.gold);
+  if (target) {
+    const notch = clamp(target.hold / 1.15, 0, 1);
+    ctx.fillStyle = COLORS.cream;
+    ctx.fillRect(756 + notch * 118 - 2, 469, 4, 20);
+  }
+  drawMeter(756, 492, 118, 7, game.exposure, game.exposure > 0.55 ? COLORS.danger : COLORS.gold);
+  drawMeter(756, 505, 118, 7, game.shakeLevel, game.shakeLevel > 0.55 ? COLORS.danger : COLORS.teal);
 }
 
 function drawCruiseHud() {
-  drawPanel(30, 26, 246, 132, "digicam");
-  drawTimerBar(58, 78, 152, 12, game.score / game.targetScore, COLORS.teal);
-  drawTimerBar(58, 108, 152, 12, game.exposure, game.exposure > 0.55 ? COLORS.danger : COLORS.gold);
+  drawPixelPanel(30, 26, 270, 124, "digicam");
+  drawMeter(58, 78, 142, 12, game.momentCount / 5, COLORS.teal);
+  drawMeter(58, 108, 142, 12, (game.queen ? 0.5 : 0) + (game.king ? 0.5 : 0), COLORS.rose);
+  drawMeter(58, 138, 142, 8, game.exposure, game.exposure > 0.55 ? COLORS.danger : COLORS.gold);
   ctx.fillStyle = COLORS.cream;
-  ctx.font = "bold 11px Trebuchet MS";
-  ctx.fillText("score", 218, 88);
-  ctx.fillText("patrol", 218, 118);
-  const b = captureButton();
-  ctx.fillStyle = game.captureHeld ? COLORS.green : "rgba(255,241,214,.12)";
-  ctx.fillRect(b.x, b.y, b.w, b.h);
-  ctx.strokeStyle = COLORS.gold;
-  ctx.strokeRect(b.x, b.y, b.w, b.h);
-  ctx.fillStyle = game.captureHeld ? COLORS.ink : COLORS.cream;
-  ctx.font = "bold 13px Trebuchet MS";
-  center("HOLD SHOT", b.x + b.w / 2, b.y + 28);
+  ctx.font = "bold 11px Courier New";
+  ctx.fillText("moments", 210, 88);
+  ctx.fillText("Q + K", 210, 118);
+  ctx.fillText("light", 210, 146);
+  drawFilmstrip();
 }
 
-function captureButton() {
-  return { x: 792, y: 454, w: 132, h: 48 };
+function drawFilmstrip() {
+  const x = 316;
+  const y = 488;
+  ctx.fillStyle = "rgba(5,5,13,.76)";
+  ctx.fillRect(x, y, 328, 36);
+  ctx.strokeStyle = "rgba(255,240,210,.34)";
+  ctx.strokeRect(x, y, 328, 36);
+  for (let i = 0; i < 8; i += 1) {
+    const label = game.film[i] || "";
+    ctx.fillStyle = label ? "rgba(255,211,107,.22)" : "rgba(255,240,210,.07)";
+    ctx.fillRect(x + 10 + i * 38, y + 8, 28, 20);
+    ctx.fillStyle = label === "Q" ? COLORS.rose : label === "K" ? COLORS.gold : COLORS.cream;
+    ctx.font = "bold 12px Courier New";
+    center(label, x + 24 + i * 38, y + 23);
+  }
 }
 
-/* SHARED DRAWING AND UTILITY */
+/* SHARED DRAWING */
 
-function updateEffects(dt) {
-  floaters.forEach((f) => {
-    f.age += dt;
-    f.y -= dt * 28;
-  });
-  floaters = floaters.filter((f) => f.age < 1.1);
-  bursts.forEach((b) => { b.age += dt; });
-  bursts = bursts.filter((b) => b.age < 0.75);
-}
-
-function drawEffects() {
-  drawFloaters();
-  drawBursts();
-}
-
-function drawFloaters() {
-  floaters.forEach((f) => {
-    ctx.globalAlpha = 1 - f.age / 1.1;
-    ctx.fillStyle = f.color;
-    ctx.font = "bold 14px Trebuchet MS";
-    center(f.text, f.x, f.y);
-    ctx.globalAlpha = 1;
-  });
-}
-
-function drawBursts() {
-  bursts.forEach((b) => {
-    const alpha = 1 - b.age / 0.75;
-    for (let i = 0; i < b.count; i += 1) {
-      const angle = (i / b.count) * Math.PI * 2;
-      const r = b.age * 70;
-      ctx.fillStyle = rgba(b.color, alpha);
-      ctx.fillRect(b.x + Math.cos(angle) * r, b.y + Math.sin(angle) * r, 4, 4);
-    }
-  });
-}
-
-function floatText(text, x, y, color = COLORS.cream) {
-  floaters.push({ text, x, y, color, age: 0 });
-}
-
-function burst(x, y, count = 12, color = COLORS.gold) {
-  bursts.push({ x, y, count, color, age: 0 });
-}
-
-function shake() {
-  canvas.classList.remove("shake");
-  void canvas.offsetWidth;
-  canvas.classList.add("shake");
-}
-
-function drawPauseOverlay() {
-  ctx.fillStyle = "rgba(8,7,18,.58)";
-  ctx.fillRect(0, 0, W, H);
-  ctx.fillStyle = COLORS.gold;
-  ctx.font = "bold 28px Trebuchet MS";
-  center("PAUSED", W / 2, H / 2);
-}
-
-function drawPanel(x, y, w, h, title) {
-  ctx.fillStyle = "rgba(8,7,18,.72)";
+function drawPixelPanel(x, y, w, h, title) {
+  ctx.fillStyle = "rgba(5,5,13,.76)";
   ctx.fillRect(x, y, w, h);
-  ctx.strokeStyle = "rgba(248,207,104,.38)";
+  ctx.strokeStyle = "rgba(255,211,107,.42)";
   ctx.lineWidth = 2;
   ctx.strokeRect(x, y, w, h);
   ctx.fillStyle = COLORS.gold;
-  ctx.font = "bold 12px Trebuchet MS";
-  ctx.fillText(title.toUpperCase(), x + 16, y + 28);
+  ctx.font = "bold 12px Courier New";
+  ctx.fillText(title.toUpperCase(), x + 16, y + 26);
 }
 
-function drawTimerBar(x, y, w, h, amount, color) {
-  ctx.fillStyle = "rgba(0,0,0,.5)";
+function drawMeter(x, y, w, h, amount, color) {
+  ctx.fillStyle = "rgba(0,0,0,.54)";
   ctx.fillRect(x, y, w, h);
   ctx.fillStyle = color;
   ctx.fillRect(x, y, w * clamp(amount, 0, 1), h);
-  ctx.strokeStyle = "rgba(255,241,214,.3)";
+  ctx.strokeStyle = "rgba(255,240,210,.34)";
   ctx.strokeRect(x, y, w, h);
 }
 
-function drawChoiceButton(box, label, color) {
-  ctx.fillStyle = color;
-  ctx.fillRect(box.x, box.y, box.w, box.h);
-  ctx.strokeStyle = COLORS.cream;
-  ctx.lineWidth = 2;
-  ctx.strokeRect(box.x, box.y, box.w, box.h);
-  ctx.fillStyle = COLORS.ink;
-  ctx.font = "bold 13px Trebuchet MS";
-  center(label, box.x + box.w / 2, box.y + 27);
-}
-
 function drawHearts(x, y, hearts) {
-  ctx.fillStyle = "rgba(8,7,18,.66)";
-  ctx.fillRect(x, y, 110, 34);
-  ctx.strokeStyle = "rgba(255,241,214,.28)";
-  ctx.strokeRect(x, y, 110, 34);
-  for (let i = 0; i < 3; i += 1) drawPixelHeart(x + 14 + i * 32, y + 8, i < hearts ? COLORS.rose : "rgba(255,241,214,.22)", 0.7);
+  ctx.fillStyle = "rgba(5,5,13,.72)";
+  ctx.fillRect(x, y, 116, 36);
+  ctx.strokeStyle = "rgba(255,240,210,.3)";
+  ctx.strokeRect(x, y, 116, 36);
+  for (let i = 0; i < 3; i += 1) {
+    drawPixelHeart(x + 16 + i * 34, y + 9, i < hearts ? COLORS.rose : "rgba(255,240,210,.22)", 0.66);
+  }
 }
 
-function drawAsset(key, x, y, w, h, mode = "cover") {
-  const asset = assets[key];
-  if (!asset || !asset.ready) return false;
-  const img = asset.img;
-  const scale = mode === "contain" ? Math.min(w / img.naturalWidth, h / img.naturalHeight) : Math.max(w / img.naturalWidth, h / img.naturalHeight);
-  const sw = w / scale;
-  const sh = h / scale;
-  const sx = (img.naturalWidth - sw) / 2;
-  const sy = (img.naturalHeight - sh) / 2;
-  if (mode === "contain") {
-    const dw = img.naturalWidth * scale;
-    const dh = img.naturalHeight * scale;
-    ctx.drawImage(img, x + (w - dw) / 2, y + (h - dh) / 2, dw, dh);
-  } else {
-    ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+function drawPlayingCard(x, y, label, scale = 1) {
+  const w = 44 * scale;
+  const h = 62 * scale;
+  ctx.fillStyle = "#fff8e8";
+  ctx.fillRect(x, y, w, h);
+  ctx.strokeStyle = "#150d18";
+  ctx.lineWidth = Math.max(1, 2 * scale);
+  ctx.strokeRect(x, y, w, h);
+  const red = label.includes("♥") || label.includes("♦");
+  ctx.fillStyle = red ? "#c82448" : "#15151e";
+  ctx.font = `bold ${Math.max(10, 17 * scale)}px Courier New`;
+  center(label, x + w / 2, y + h / 2 + 5 * scale);
+}
+
+function drawTopCar(x, y, color, label) {
+  ctx.fillStyle = color;
+  ctx.fillRect(x - 26, y - 42, 52, 84);
+  ctx.fillStyle = "rgba(255,255,255,.52)";
+  ctx.fillRect(x - 16, y - 26, 32, 20);
+  ctx.fillRect(x - 16, y + 10, 32, 18);
+  ctx.fillStyle = "#10131d";
+  ctx.fillRect(x - 30, y - 30, 7, 20);
+  ctx.fillRect(x + 23, y - 30, 7, 20);
+  ctx.fillRect(x - 30, y + 12, 7, 20);
+  ctx.fillRect(x + 23, y + 12, 7, 20);
+  if (label) {
+    ctx.fillStyle = COLORS.ink;
+    ctx.font = "bold 14px Courier New";
+    center(label, x, y + 5);
   }
-  return true;
 }
 
 function drawFruit(name, x, y, scale = 1) {
-  const fruit = FRUIT[name];
-  if (fruit.asset && drawAsset(fruit.asset, x - 28 * scale, y - 26 * scale, 56 * scale, 52 * scale, "contain")) return;
+  const fruit = FRUITS[name];
+  const size = 58 * scale;
+  if (fruit.asset && drawImageContain(fruit.asset, x - size / 2, y - size / 2, size, size)) return;
   ctx.save();
   ctx.translate(x, y);
   ctx.scale(scale, scale);
   if (name === "pomegranate") {
-    circle(0, 0, 22, fruit.color);
+    circle(0, 0, 24, fruit.color);
+    ctx.fillStyle = "#9b1736";
+    ctx.fillRect(-14, -6, 28, 16);
     ctx.fillStyle = COLORS.gold;
-    triangle(-6, -20, 0, -30, 6, -20);
+    triangle(-8, -21, 0, -32, 8, -21);
+    ctx.fillStyle = "#ffd6de";
+    ctx.fillRect(-8, 4, 4, 4);
+    ctx.fillRect(4, -2, 4, 4);
+    ctx.fillRect(7, 8, 4, 4);
   } else if (name === "orange") {
-    circle(0, 0, 23, fruit.color);
+    circle(0, 0, 24, fruit.color);
     ctx.fillStyle = "rgba(255,255,255,.25)";
-    ctx.fillRect(-9, -13, 12, 7);
+    ctx.fillRect(-10, -13, 12, 8);
+    ctx.fillStyle = "#5dbb56";
+    ctx.fillRect(2, -28, 14, 7);
   } else {
-    circle(0, 0, 22, fruit.color);
+    circle(0, 0, 23, fruit.color);
   }
   ctx.restore();
 }
@@ -1585,88 +1650,133 @@ function drawPixelHeart(x, y, color, scale = 1) {
   ctx.restore();
 }
 
-function drawCup(x, y, fill) {
-  ctx.strokeStyle = COLORS.cream;
-  ctx.lineWidth = 3;
-  ctx.strokeRect(x, y, 68, 92);
-  ctx.fillStyle = "rgba(255,241,214,.12)";
-  ctx.fillRect(x + 4, y + 4, 60, 84);
-  const fh = 84 * clamp(fill, 0, 1);
-  const grad = ctx.createLinearGradient(x, y + 92, x, y);
-  grad.addColorStop(0, "#7a3fc7");
-  grad.addColorStop(0.5, "#f89a2c");
-  grad.addColorStop(1, "#c63f5c");
-  ctx.fillStyle = grad;
-  ctx.fillRect(x + 4, y + 88 - fh, 60, fh);
+function drawPerson(x, y, shirt, apron) {
+  ctx.fillStyle = "#c78b58";
+  ctx.fillRect(x - 18, y - 76, 36, 34);
+  ctx.fillStyle = "#2b1a22";
+  ctx.fillRect(x - 22, y - 82, 44, 12);
+  ctx.fillStyle = shirt;
+  ctx.fillRect(x - 30, y - 42, 60, 78);
+  ctx.fillStyle = apron;
+  ctx.fillRect(x - 22, y - 28, 44, 64);
 }
 
-function drawBubble(x, y, w, h, text) {
-  ctx.fillStyle = "rgba(255,241,214,.94)";
+function drawSpeechBubble(x, y, w, h, text) {
+  ctx.fillStyle = "rgba(255,246,225,.96)";
   ctx.fillRect(x, y, w, h);
-  ctx.fillStyle = "rgba(255,241,214,.94)";
-  triangle(x + 24, y + h, x + 48, y + h, x + 30, y + h + 20);
+  ctx.fillStyle = "rgba(255,246,225,.96)";
+  triangle(x + 44, y + h, x + 76, y + h, x + 56, y + h + 22);
   ctx.strokeStyle = COLORS.plum;
   ctx.lineWidth = 2;
   ctx.strokeRect(x, y, w, h);
   ctx.fillStyle = COLORS.plum;
-  ctx.font = "bold 16px Trebuchet MS";
-  wrapText(text, x + 16, y + 26, w - 32, 19);
+  ctx.font = "bold 16px Courier New";
+  wrapText(text, x + 16, y + 29, w - 32, 20);
 }
 
-function drawWave(y, color) {
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  for (let x = 0; x <= W; x += 8) {
-    const yy = y + Math.sin(x * 0.02 + clock * 1.3) * 5;
-    if (x === 0) ctx.moveTo(x, yy);
-    else ctx.lineTo(x, yy);
+function drawImageCover(key, x, y, w, h) {
+  return drawImageMode(key, x, y, w, h, "cover");
+}
+
+function drawImageContain(key, x, y, w, h) {
+  return drawImageMode(key, x, y, w, h, "contain");
+}
+
+function drawImageMode(key, x, y, w, h, mode) {
+  const record = assets[key];
+  if (!record || !record.ready) return false;
+  const img = record.img;
+  const iw = img.naturalWidth || img.width;
+  const ih = img.naturalHeight || img.height;
+  if (!iw || !ih) return false;
+  const scale = mode === "contain" ? Math.min(w / iw, h / ih) : Math.max(w / iw, h / ih);
+  const dw = iw * scale;
+  const dh = ih * scale;
+  if (mode === "contain") {
+    ctx.drawImage(img, x + (w - dw) / 2, y + (h - dh) / 2, dw, dh);
+  } else {
+    const sx = Math.max(0, (iw - w / scale) / 2);
+    const sy = Math.max(0, (ih - h / scale) / 2);
+    ctx.drawImage(img, sx, sy, Math.min(iw, w / scale), Math.min(ih, h / scale), x, y, w, h);
   }
-  ctx.stroke();
+  return true;
 }
 
-function person(x, y, color) {
-  ctx.fillStyle = color;
-  ctx.fillRect(x - 6, y - 18, 12, 22);
-  ctx.fillStyle = COLORS.cream;
-  ctx.fillRect(x - 5, y - 30, 10, 10);
+function drawPauseOverlay() {
+  ctx.fillStyle = "rgba(5,5,13,.62)";
+  ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = COLORS.gold;
+  ctx.font = "bold 30px Courier New";
+  center("PAUSED", W / 2, H / 2);
 }
 
-function trueBox() { return { x: 548, y: 426, w: 120, h: 38 }; }
-function falseBox() { return { x: 704, y: 426, w: 120, h: 38 }; }
-function acceptBox() { return { x: 654, y: 180, w: 92, h: 36 }; }
-function rejectBox() { return { x: 762, y: 180, w: 92, h: 36 }; }
-function finalAcceptBox() { return { x: 574, y: 438, w: 112, h: 36 }; }
-function finalRejectBox() { return { x: 704, y: 438, w: 112, h: 36 }; }
-
-function insideFruit(p, box) {
-  return p.x >= box.x - box.w / 2 && p.x <= box.x + box.w / 2 && p.y >= box.y - box.h / 2 && p.y <= box.y + box.h / 2;
+function updateEffects(dt) {
+  floaters.forEach((f) => {
+    f.age += dt;
+    f.y -= dt * 30;
+  });
+  floaters = floaters.filter((f) => f.age < 1.05);
+  bursts.forEach((b) => { b.age += dt; });
+  bursts = bursts.filter((b) => b.age < 0.72);
 }
+
+function drawEffects() {
+  floaters.forEach((f) => {
+    ctx.globalAlpha = 1 - f.age / 1.05;
+    ctx.fillStyle = f.color;
+    ctx.font = "bold 14px Courier New";
+    center(f.text, f.x, f.y);
+    ctx.globalAlpha = 1;
+  });
+  bursts.forEach((b) => {
+    const alpha = 1 - b.age / 0.72;
+    for (let i = 0; i < b.count; i += 1) {
+      const angle = (i / b.count) * Math.PI * 2 + b.seed;
+      const r = b.age * 86;
+      ctx.fillStyle = rgba(b.color, alpha);
+      ctx.fillRect(b.x + Math.cos(angle) * r, b.y + Math.sin(angle) * r, 4, 4);
+    }
+  });
+}
+
+function floatText(text, x, y, color = COLORS.cream) {
+  floaters.push({ text, x, y, color, age: 0 });
+}
+
+function burst(x, y, count = 12, color = COLORS.gold) {
+  bursts.push({ x, y, count, color, age: 0, seed: randRange(0, Math.PI * 2) });
+}
+
+function shake() {
+  dom.canvas.classList.remove("shake");
+  void dom.canvas.offsetWidth;
+  dom.canvas.classList.add("shake");
+}
+
+/* UTILITIES */
 
 function point(event) {
   return pointFromClient(event.clientX, event.clientY);
 }
 
 function pointFromClient(clientX, clientY) {
-  const rect = canvas.getBoundingClientRect();
+  const rect = dom.canvas.getBoundingClientRect();
   return {
     x: ((clientX - rect.left) / rect.width) * W,
     y: ((clientY - rect.top) / rect.height) * H
   };
 }
 
-function inside(p, box) {
-  return p.x >= box.x && p.x <= box.x + box.w && p.y >= box.y && p.y <= box.y + box.h;
+function heartText(hearts) {
+  return Array.from({ length: 3 }, (_, i) => (i < hearts ? "♥" : "♡")).join(" ");
+}
+
+function rectsOverlap(a, b) {
+  return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
 }
 
 function dist(x1, y1, x2, y2) {
   return Math.hypot(x1 - x2, y1 - y2);
-}
-
-function routeLength(points) {
-  let total = 0;
-  for (let i = 1; i < points.length; i += 1) total += dist(points[i - 1].x, points[i - 1].y, points[i].x, points[i].y);
-  return total;
 }
 
 function triangle(x1, y1, x2, y2, x3, y3) {
@@ -1694,16 +1804,16 @@ function center(text, x, y) {
 function wrapText(text, x, y, maxWidth, lineHeight) {
   const words = String(text).split(" ");
   let line = "";
-  for (let i = 0; i < words.length; i += 1) {
-    const test = line ? `${line} ${words[i]}` : words[i];
+  words.forEach((word) => {
+    const test = line ? `${line} ${word}` : word;
     if (ctx.measureText(test).width > maxWidth && line) {
       ctx.fillText(line, x, y);
-      line = words[i];
+      line = word;
       y += lineHeight;
     } else {
       line = test;
     }
-  }
+  });
   if (line) ctx.fillText(line, x, y);
 }
 
@@ -1711,17 +1821,37 @@ function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
 }
 
+function lerp(a, b, t) {
+  return a + (b - a) * clamp(t, 0, 1);
+}
+
 function shuffle(list) {
   const copy = [...list];
   for (let i = copy.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(rand() * (i + 1));
     [copy[i], copy[j]] = [copy[j], copy[i]];
   }
   return copy;
 }
 
-function heartText(hearts) {
-  return Array.from({ length: 3 }, (_, i) => i < hearts ? "♥" : "♡").join(" ");
+function randomChoice(list) {
+  return list[Math.floor(rand() * list.length)];
+}
+
+function maybe(chance) {
+  return rand() < chance;
+}
+
+function randRange(min, max) {
+  return min + rand() * (max - min);
+}
+
+function rand() {
+  rngState += 0x6D2B79F5;
+  let t = rngState;
+  t = Math.imul(t ^ (t >>> 15), t | 1);
+  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
 }
 
 function rgba(hex, alpha) {
@@ -1730,8 +1860,27 @@ function rgba(hex, alpha) {
   return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
 }
 
+function mixColor(hexA, hexB, amount) {
+  const a = parseInt(hexA.slice(1), 16);
+  const b = parseInt(hexB.slice(1), 16);
+  const ar = (a >> 16) & 255;
+  const ag = (a >> 8) & 255;
+  const ab = a & 255;
+  const br = (b >> 16) & 255;
+  const bg = (b >> 8) & 255;
+  const bb = b & 255;
+  const r = Math.round(lerp(ar, br, amount));
+  const g = Math.round(lerp(ag, bg, amount));
+  const bl = Math.round(lerp(ab, bb, amount));
+  return `rgb(${r}, ${g}, ${bl})`;
+}
+
 function angleDiff(a, b) {
   return Math.atan2(Math.sin(a - b), Math.cos(a - b));
 }
 
+preloadAssets();
+bindUi();
 updateMenu();
+setInterval(ambientParticle, 800);
+for (let i = 0; i < 9; i += 1) setTimeout(ambientParticle, i * 140);

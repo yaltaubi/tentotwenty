@@ -11,8 +11,8 @@
 <body>
   <div id="loading-screen" class="loading-screen">
     <div class="loading-card">
-      <span class="loading-mark">01</span>
-      <p id="loading-text">loading the spots...</p>
+      <span class="loading-number">01</span>
+      <p id="loading-text">loading the memory map...</p>
     </div>
   </div>
 
@@ -21,30 +21,39 @@
 
   <main class="app">
     <section id="home-screen" class="screen">
+      <div class="card-anchor card-queen" aria-hidden="true">
+        <span>Q</span>
+        <b>♥</b>
+      </div>
+      <div class="card-anchor card-king" aria-hidden="true">
+        <span>K</span>
+        <b>♠</b>
+      </div>
+
       <div class="home-panel">
         <p class="label">choose our next spot</p>
         <h1>steaks got higher</h1>
-        <p class="subtitle">A tiny pixel map of the usual chaos.</p>
+        <p class="subtitle">A tiny 8-bit map of the usual chaos.</p>
 
         <div class="level-grid">
-          <button class="level-card" data-level="1" aria-label="Start spot one">
-            <span class="cover"><img src="logo_juice_palace.png" alt="" /></span>
+          <button class="level-card" data-level="1" aria-label="Start memory 01">
+            <span class="cover cover-juice"><img src="logo_juice_palace.png" alt="" /></span>
             <span class="number">01</span>
-            <span class="tease">Memorize the order. Catch the lies.</span>
+            <span class="tease">Read him. Mix it right.</span>
             <span class="progress-mark" aria-hidden="true">✓</span>
           </button>
 
-          <button class="level-card" data-level="2" aria-label="Start spot two">
+          <button class="level-card" data-level="2" aria-label="Start memory 02">
             <span class="cover"><img src="scene_mountain.png" alt="" /></span>
             <span class="number">02</span>
-            <span class="tease">Park Jojo. Build the setup. Protect the vibe.</span>
+            <span class="tease">Park close. Build smart. Hold the vibe.</span>
             <span class="progress-mark" aria-hidden="true">✓</span>
           </button>
 
-          <button class="level-card" data-level="3" aria-label="Start spot three">
+          <button class="level-card" data-level="3" aria-label="Start memory 03">
             <span class="cover"><img src="scene_cruise.png" alt="" /></span>
             <span class="number">03</span>
-            <span class="tease">Frame the memories. Avoid the patrol.</span>
+            <span class="tease">Frame the memory. Dodge the patrol.</span>
             <span class="progress-mark" aria-hidden="true">✓</span>
           </button>
         </div>
@@ -73,8 +82,8 @@
 
     <div id="popup" class="popup hidden">
       <div class="popup-card">
-        <p id="popup-kicker" class="label">saved</p>
-        <h2 id="popup-title">memory kept</h2>
+        <p class="label">memory saved</p>
+        <h2 id="popup-title">kept</h2>
         <p id="popup-text"></p>
         <div class="popup-actions">
           <button id="replay-btn" class="pixel-btn" type="button">replay</button>
@@ -83,12 +92,16 @@
       </div>
     </div>
 
-    <section id="teaser-screen" class="screen hidden">
-      <div class="home-panel small">
-        <p class="label">all spots cleared</p>
+    <section id="final-screen" class="screen hidden">
+      <div class="final-panel">
+        <p class="label">memory saved</p>
+        <div class="merge-cards" aria-hidden="true">
+          <div class="final-card final-queen"><span>Q</span><b>♥</b></div>
+          <div class="final-card final-king"><span>K</span><b>♠</b></div>
+        </div>
         <h1>the map folds itself</h1>
-        <p class="subtitle">RAV4 and Jojo are already parked for the next one.</p>
-        <button id="teaser-back-btn" class="pixel-btn" type="button">back to spots</button>
+        <p class="subtitle">The queen and king found the same pocket.</p>
+        <button id="final-back-btn" class="pixel-btn" type="button">back to spots</button>
       </div>
     </section>
   </main>
